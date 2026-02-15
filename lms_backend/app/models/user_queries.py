@@ -1,5 +1,3 @@
-# app/models/user_queries.py
-
 def create_user(conn, name, email, password_hash, role_id):
     with conn.cursor() as cur:
         cur.execute("""
@@ -7,8 +5,14 @@ def create_user(conn, name, email, password_hash, role_id):
             VALUES (%s, %s, %s, %s)
             RETURNING user_id
         """, (name, email, password_hash, role_id))
-        return cur.fetchone()[0]
-
+        result = cur.fetchone()
+        
+        # Save the user to the database
+        conn.commit()
+        
+        if result:
+            return result.get('user_id')
+        return None
 
 def get_user_by_email(conn, email):
     with conn.cursor() as cur:
@@ -19,7 +23,6 @@ def get_user_by_email(conn, email):
         """, (email,))
         return cur.fetchone()
 
-
 def get_user_by_id(conn, user_id):
     with conn.cursor() as cur:
         cur.execute("""
@@ -28,7 +31,6 @@ def get_user_by_id(conn, user_id):
             WHERE user_id = %s
         """, (user_id,))
         return cur.fetchone()
-
 
 def update_user_status(conn, user_id, status, approved_by=None):
     with conn.cursor() as cur:
@@ -39,3 +41,5 @@ def update_user_status(conn, user_id, status, approved_by=None):
                 approved_at = CURRENT_TIMESTAMP
             WHERE user_id = %s
         """, (status, approved_by, user_id))
+        # Save the status change
+        conn.commit()
