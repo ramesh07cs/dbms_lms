@@ -7,6 +7,7 @@ __pycache__/
 lms_env/
 venv/
 .venv/
+updated_env/
 
 # Environment variables
 .env
