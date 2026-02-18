@@ -6,6 +6,7 @@ __pycache__/
 # Virtual environment
 lms_env/
 venv/
+.venv/
 
 # Environment variables
 .env

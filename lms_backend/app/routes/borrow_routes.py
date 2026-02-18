@@ -14,10 +14,12 @@ borrow_bp = Blueprint("borrow", __name__)
 def issue():
     conn = get_db()
     user = get_jwt_identity()
-    claims = get_jwt()
-
+    
+    # Get role_id from identity, not from claims
+    role_id = user.get("role_id")
+    
     # Only role 2 (teacher) or 3 (student) can borrow
-    if claims["role_id"] not in [2, 3]:
+    if role_id not in [2, 3]:
         return jsonify({"error": "Only students or teachers can borrow books"}), 403
 
     data = request.get_json()
@@ -46,9 +48,11 @@ def issue():
 def return_book():
     conn = get_db()
     user = get_jwt_identity()
-    claims = get_jwt()
+    
+    # Get role_id from identity, not from claims
+    role_id = user.get("role_id")
 
-    if claims["role_id"] not in [2, 3]:
+    if role_id not in [2, 3]:
         return jsonify({"error": "Only students or teachers can return books"}), 403
 
     data = request.get_json()
