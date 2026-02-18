@@ -36,7 +36,10 @@ def create_app():
             get_db()  # sets g.db automatically
         except Exception as e:
             print("DB Connection Error in before_request:", e)
-            return {"error": "Database connection failed"}, 500
+            # Don't short-circuit the request here — allow the route handler to
+            # run so its debug prints (e.g., in `borrow_routes.issue`) are visible.
+            # Route-level DB usage will still raise when `get_db()` is called there.
+            g.db_connection_error = e
 
     app.teardown_appcontext(close_db)
 

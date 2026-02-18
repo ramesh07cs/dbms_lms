@@ -26,4 +26,7 @@ class Config:
     # ==========================
     # Database
     # ==========================
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///lms.db")
+    # Do not provide a non-Postgres default. Require users to set DATABASE_URL
+    # in their environment (e.g., in a .env file). This avoids passing invalid
+    # DSNs to psycopg2 when the app expects PostgreSQL.
+    DATABASE_URL = os.getenv("DATABASE_URL")
