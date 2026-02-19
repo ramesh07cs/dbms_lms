@@ -2,7 +2,14 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from app.utils.decorators import admin_required
 from app.models.db import get_db
-from app.services.book_service import add_book, fetch_book, fetch_all_books, change_book_copies
+from app.services.book_service import (
+    add_book,
+    fetch_book,
+    fetch_all_books,
+    change_book_copies,
+    update_book_details,
+    remove_book,
+)
 
 book_bp = Blueprint("book", __name__)
 
@@ -22,7 +29,8 @@ def create_book_route():
             title=data.get("title"),
             author=data.get("author"),
             isbn=data.get("isbn"),
-            total_copies=data.get("total_copies")
+            total_copies=data.get("total_copies"),
+            category=data.get("category")
         )
         return jsonify({"message": "Book created successfully", "book_id": book_id}), 201
 
@@ -69,6 +77,49 @@ def get_all_books_route():
         return jsonify(books), 200
     except Exception as e:
         print(e)
+        return jsonify({"error": "Internal server error"}), 500
+
+
+# =========================
+# ADMIN: UPDATE BOOK (full)
+# =========================
+@book_bp.route("/<int:book_id>", methods=["PUT"])
+@jwt_required()
+@admin_required
+def update_book_route(book_id):
+    conn = get_db()
+    data = request.get_json()
+    try:
+        update_book_details(
+            conn,
+            book_id,
+            title=data.get("title"),
+            author=data.get("author"),
+            category=data.get("category"),
+            isbn=data.get("isbn"),
+            total_copies=data.get("total_copies"),
+        )
+        return jsonify({"message": "Book updated successfully"}), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": "Internal server error"}), 500
+
+
+# =========================
+# ADMIN: DELETE BOOK (soft)
+# =========================
+@book_bp.route("/<int:book_id>", methods=["DELETE"])
+@jwt_required()
+@admin_required
+def delete_book_route(book_id):
+    conn = get_db()
+    try:
+        remove_book(conn, book_id)
+        return jsonify({"message": "Book deleted successfully"}), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
         return jsonify({"error": "Internal server error"}), 500
 
 

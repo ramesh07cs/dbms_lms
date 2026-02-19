@@ -2,7 +2,12 @@
 
 from datetime import datetime, timedelta
 from app.models.book_queries import get_book_by_id, update_book_copies
-from app.models.borrow_queries import create_borrow, get_active_borrow, return_book_record
+from app.models.borrow_queries import (
+    create_borrow,
+    get_active_borrow,
+    get_borrow_by_id,
+    return_book_record,
+)
 from app.models.reservation_queries import (
     expire_overdue_reservations,
     get_oldest_active_reservation,
@@ -186,3 +191,26 @@ def return_borrowed_book(conn, user_id, book_id):
     except Exception as e:
         conn.rollback()
         raise e
+
+
+# =====================================================
+# ADMIN: ISSUE BOOK TO ANY USER
+# =====================================================
+def admin_issue_book(conn, target_user_id, book_id):
+    """Admin issues a book to a specific user."""
+    return issue_book(conn, target_user_id, book_id)
+
+
+# =====================================================
+# ADMIN: RETURN BY BORROW ID
+# =====================================================
+def admin_return_by_borrow_id(conn, borrow_id):
+    """Admin returns a book by borrow_id. Returns fine info if applicable."""
+    borrow = get_borrow_by_id(conn, borrow_id)
+    if not borrow:
+        raise ValueError("Borrow record not found")
+    if borrow["borrow_status"] == "RETURNED":
+        raise ValueError("Book already returned")
+    user_id = borrow["user_id"]
+    book_id = borrow["book_id"]
+    return return_borrowed_book(conn, user_id, book_id)

@@ -7,6 +7,19 @@ from app.services.fine_service import pay_fine, get_my_unpaid_fines, get_all_fin
 fine_bp = Blueprint("fine", __name__)
 
 
+@fine_bp.route("/all", methods=["GET"])
+@jwt_required()
+@admin_required
+def all_fines():
+    page = int(request.args.get("page", 1))
+    conn = get_db()
+    try:
+        fines = get_all_fines_admin(conn, page)
+        return jsonify(fines)
+    finally:
+        pass
+
+
 @fine_bp.route("/my", methods=["GET"])
 @jwt_required()
 def my_fines():
@@ -25,6 +38,7 @@ def my_fines():
 
 
 @fine_bp.route("/pay/<int:fine_id>", methods=["POST"])
+@jwt_required()
 @admin_required
 def pay_fine_route(fine_id):
     current_user = get_jwt_identity()

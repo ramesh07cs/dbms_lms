@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, create_refresh_token,jwt_required, get_jwt, get_jwt_identity
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt, get_jwt_identity
 from marshmallow import ValidationError
 
-
 from app.models.db import get_db
-from app.services.user_service import register_user, authenticate_user
+from app.models.user_queries import get_pending_users
+from app.services.user_service import register_user, authenticate_user, approve_or_reject_user
+from app.utils.decorators import admin_required
 from app.schemas.user_schema import RegisterSchema, LoginSchema
 from app.utils.token_blacklist import add_token_to_blacklist  # import for logout
 
@@ -31,7 +32,8 @@ def register():
             data["name"],
             data["email"],
             data["password"],
-            data["role_id"]
+            data["role_id"],
+            data.get("phone")
         )
 
         return jsonify({
@@ -118,6 +120,44 @@ def profile():
             "role_id": current_user["role_id"]
         }
     }), 200
+
+# =========================
+# ADMIN: PENDING USERS
+# =========================
+@user_bp.route("/pending", methods=["GET"])
+@jwt_required()
+@admin_required
+def pending_users():
+    conn = get_db()
+    users = get_pending_users(conn)
+    return jsonify(users)
+
+
+@user_bp.route("/approve/<int:user_id>", methods=["POST"])
+@jwt_required()
+@admin_required
+def approve_user(user_id):
+    conn = get_db()
+    admin = get_jwt_identity()
+    try:
+        approve_or_reject_user(conn, user_id, "APPROVED", admin["id"])
+        return jsonify({"message": "User approved successfully"}), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@user_bp.route("/reject/<int:user_id>", methods=["POST"])
+@jwt_required()
+@admin_required
+def reject_user(user_id):
+    conn = get_db()
+    admin = get_jwt_identity()
+    try:
+        approve_or_reject_user(conn, user_id, "REJECTED", admin["id"])
+        return jsonify({"message": "User rejected"}), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
 
 # =========================
 # LOGOUT (JWT BLACKLIST)

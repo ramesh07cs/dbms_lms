@@ -3,10 +3,12 @@ from app.models.book_queries import (
     get_book_by_id,
     get_book_by_isbn,
     update_book_copies,
+    update_book,
+    soft_delete_book,
     get_all_books
 )
 
-def add_book(conn, title, author, isbn, total_copies):
+def add_book(conn, title, author, isbn, total_copies, category=None):
     try:
         if not title or not author or not isbn:
             raise ValueError("Title, Author and ISBN are required")
@@ -21,7 +23,7 @@ def add_book(conn, title, author, isbn, total_copies):
         if existing:
             raise ValueError("Book with this ISBN already exists")
 
-        book_id = create_book(conn, title, author, isbn, total_copies)
+        book_id = create_book(conn, title, author, isbn, total_copies, category)
         conn.commit()
         return book_id
 
@@ -55,6 +57,41 @@ def change_book_copies(conn, book_id, new_available_copies):
         update_book_copies(conn, book_id, new_available_copies)
         conn.commit()
 
+    except Exception:
+        conn.rollback()
+        raise
+
+
+def update_book_details(conn, book_id, title=None, author=None, category=None, isbn=None, total_copies=None):
+    """Update book fields."""
+    book = get_book_by_id(conn, book_id)
+    if not book:
+        raise ValueError("Book not found")
+    if total_copies is not None:
+        total_copies = int(total_copies)
+        if total_copies < 0:
+            raise ValueError("Total copies cannot be negative")
+        borrowed = book["total_copies"] - book["available_copies"]
+        if total_copies < borrowed:
+            raise ValueError("Total copies cannot be less than borrowed copies")
+    try:
+        update_book(conn, book_id, title, author, category, isbn, total_copies)
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+
+
+def remove_book(conn, book_id):
+    """Soft delete a book."""
+    book = get_book_by_id(conn, book_id)
+    if not book:
+        raise ValueError("Book not found")
+    if book["available_copies"] < book["total_copies"]:
+        raise ValueError("Cannot delete book with active borrows")
+    try:
+        soft_delete_book(conn, book_id)
+        conn.commit()
     except Exception:
         conn.rollback()
         raise

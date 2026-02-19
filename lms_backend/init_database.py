@@ -2,6 +2,7 @@ import os
 import sys
 import psycopg2
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash
 
 load_dotenv()
 
@@ -55,6 +56,35 @@ def init_db():
 
         with conn.cursor() as cur:
             cur.execute(sql)
+
+            # Create default admin user if not present
+            try:
+                admin_email = os.getenv("ADMIN_EMAIL") or os.getenv("DEFAULT_ADMIN_EMAIL") or "admin@example.com"
+                admin_password = os.getenv("ADMIN_PASSWORD") or os.getenv("DEFAULT_ADMIN_PASSWORD") or "admin123"
+                admin_name = os.getenv("ADMIN_NAME") or "Administrator"
+
+                # Get ADMIN role id (roles are seeded in schema.sql)
+                cur.execute("SELECT role_id FROM roles WHERE role_name = %s", ("ADMIN",))
+                role_row = cur.fetchone()
+                role_id = role_row[0] if role_row else 1
+
+                # Check if admin user already exists
+                cur.execute("SELECT user_id FROM users WHERE email = %s", (admin_email,))
+                if not cur.fetchone():
+                    hashed = generate_password_hash(admin_password)
+                    cur.execute(
+                        """
+                        INSERT INTO users (name, email, password, role_id, status)
+                        VALUES (%s, %s, %s, %s, %s)
+                        """,
+                        (admin_name, admin_email, hashed, role_id, "APPROVED"),
+                    )
+                    print(f"Created default admin: {admin_email}")
+                else:
+                    print(f"Default admin already exists: {admin_email}")
+            except Exception as e:
+                # Non-fatal: log and continue
+                print("Warning: failed to create default admin:", e)
 
         conn.commit()
         conn.close()

@@ -1,11 +1,13 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.models.user_queries import (
     create_user,
-    get_user_by_email
+    get_user_by_email,
+    get_pending_users,
+    update_user_status,
 )
 
 
-def register_user(conn, name, email, password, role_id):
+def register_user(conn, name, email, password, role_id, phone=None):
     """
     Handles full registration workflow:
     - Check if email exists
@@ -24,7 +26,7 @@ def register_user(conn, name, email, password, role_id):
         hashed_password = generate_password_hash(password)
 
         # Create user
-        user_id = create_user(conn, name, email, hashed_password, role_id)
+        user_id = create_user(conn, name, email, hashed_password, role_id, phone)
 
         # Commit transaction
         conn.commit()
@@ -59,3 +61,11 @@ def authenticate_user(conn, email, password):
         raise ValueError("User not approved. Please contact Admin.")
 
     return user   # return full user dict (needed for JWT claims)
+
+
+def approve_or_reject_user(conn, user_id, status, approved_by):
+    """Approve or reject a pending user. status must be APPROVED or REJECTED."""
+    if status not in ("APPROVED", "REJECTED"):
+        raise ValueError("Status must be APPROVED or REJECTED")
+    update_user_status(conn, user_id, status, approved_by)
+    conn.commit()

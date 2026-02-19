@@ -1,15 +1,15 @@
 from psycopg2.extras import RealDictCursor
 
 
-def create_book(conn, title, author, isbn, total_copies):
+def create_book(conn, title, author, isbn, total_copies, category=None):
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
             """
-            INSERT INTO books (title, author, isbn, total_copies, available_copies)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO books (title, author, isbn, total_copies, available_copies, category)
+            VALUES (%s, %s, %s, %s, %s, %s)
             RETURNING book_id;
             """,
-            (title, author, isbn, total_copies, total_copies)
+            (title, author, isbn, total_copies, total_copies, category)
         )
         return cur.fetchone()["book_id"]
 
@@ -50,3 +50,41 @@ def get_all_books(conn):
             "SELECT * FROM books WHERE is_active = TRUE;"
         )
         return cur.fetchall()
+
+
+def update_book(conn, book_id, title=None, author=None, category=None, isbn=None, total_copies=None):
+    """Update book fields. Only non-None fields are updated."""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        updates = []
+        params = []
+        if title is not None:
+            updates.append("title = %s")
+            params.append(title)
+        if author is not None:
+            updates.append("author = %s")
+            params.append(author)
+        if category is not None:
+            updates.append("category = %s")
+            params.append(category)
+        if isbn is not None:
+            updates.append("isbn = %s")
+            params.append(isbn)
+        if total_copies is not None:
+            updates.append("total_copies = %s, available_copies = LEAST(available_copies, %s)")
+            params.extend([total_copies, total_copies])
+        if not updates:
+            return
+        params.append(book_id)
+        cur.execute(
+            f"UPDATE books SET {', '.join(updates)} WHERE book_id = %s AND is_active = TRUE",
+            params
+        )
+
+
+def soft_delete_book(conn, book_id):
+    """Soft delete: set is_active = FALSE."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE books SET is_active = FALSE WHERE book_id = %s",
+            (book_id,)
+        )

@@ -1,4 +1,6 @@
 # app/models/fine_queries.py
+from psycopg2.extras import RealDictCursor
+
 
 def insert_fine(conn, borrow_id, user_id, amount):
     with conn.cursor() as cur:
@@ -11,7 +13,7 @@ def insert_fine(conn, borrow_id, user_id, amount):
 
 
 def get_user_unpaid_fines(conn, user_id, limit=20, offset=0):
-    with conn.cursor() as cur:
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
             SELECT *
             FROM fines
@@ -35,7 +37,7 @@ def mark_fine_paid(conn, fine_id):
 
 
 def get_all_fines(conn, limit=20, offset=0):
-    with conn.cursor() as cur:
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
             SELECT *
             FROM fines

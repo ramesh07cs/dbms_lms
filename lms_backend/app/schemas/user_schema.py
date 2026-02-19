@@ -9,6 +9,8 @@ class RegisterSchema(Schema):
 
     email = fields.Email(required=True)
 
+    phone = fields.Str(required=False, allow_none=True, validate=validate.Length(max=20))
+
     password = fields.Str(
         required=True,
         validate=validate.Length(min=6)

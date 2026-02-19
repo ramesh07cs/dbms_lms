@@ -1,0 +1,43 @@
+Prompt:
+Build a React frontend for a Library Management System (Tribhuvan University, Thapathali Campus) that connects to an existing Flask + PostgreSQL backend.
+Auth & Roles
+JWT-based login. Store token in memory only (not localStorage). Three roles derived from JWT payload { id, role_id, email } — Admin (role_id=1), Teacher, Student. Redirect unauthenticated users to login. Never send user_id in request body.
+Pages by Role
+Public: Login, Register (fields: name, email, phone, password, role — Student/Teacher; status starts PENDING, awaits admin approval)
+Admin Panel (sidebar nav):
+
+Dashboard — stat cards: Total Issued Books, Total Available Books, Total Students, Total Teachers, Total Fine Collected
+Verify Users — list pending registrations, Approve / Reject buttons
+Manage Books — table with Add, Edit, Delete; fields: title, author, category, isbn, total_copies
+Issue Book — form: select user + book → POST /borrow/issue
+Return Book — form: select active borrow → POST /borrow/return (show fine if generated)
+All Reservations — table view
+Fine Management — list all fines, Mark Paid button (POST /fine/pay/<fine_id>, admin only)
+Audit Logs — read-only table (GET /audit/, admin only)
+
+Teacher Panel (sidebar nav):
+
+Dashboard — cards: No. of Issued Books, Books to Return Today, Overdue Books list
+Issue/Return Books — issue a book to self; return an active borrow
+View Books — full book catalog
+View Reservations — own active reservations with status
+
+Student Panel (sidebar nav):
+
+Dashboard — cards: Currently Borrowed Books, Books Due Soon, Total Fines, Active Reservations
+Available Books — books with available_copies > 0, Reserve button
+View Books — full catalog
+Borrowed Books — borrow history table
+My Fines — GET /fine/my (unpaid fines only)
+
+Key API Endpoints
+
+POST /auth/login, POST /auth/register, POST /auth/logout
+GET /books/, POST /books/, PUT /books/<id>, DELETE /books/<id>
+POST /borrow/issue, POST /borrow/return
+POST /reservation/create, DELETE /reservation/cancel/<id>
+GET /fine/my, POST /fine/pay/<fine_id>
+GET /audit/
+
+Tech Stack: React + Vite, React Router v6, Axios with Bearer token interceptor (401 → redirect to login, 403 → show Unauthorized), Context API for auth state, TailwindCSS.
+UI Requirements: Clean sidebar layout per role. Stat cards on dashboards. Tables with basic search/filter. Toast notifications for success and error. Loading spinners on async calls. Client-side form validation before submit. Responsive design.

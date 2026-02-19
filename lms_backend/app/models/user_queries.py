@@ -1,13 +1,43 @@
-def create_user(conn, name, email, password_hash, role_id):
+from psycopg2.extras import RealDictCursor
+
+
+def get_approved_users_for_borrow(conn):
+    """Returns approved students and teachers for admin issue dropdown."""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            SELECT u.user_id, u.name, u.email, r.role_name
+            FROM users u
+            JOIN roles r ON u.role_id = r.role_id
+            WHERE u.status = 'APPROVED' AND u.role_id IN (2, 3)
+            ORDER BY u.name
+        """)
+        return cur.fetchall()
+
+
+def get_pending_users(conn):
+    """Returns list of users with status PENDING."""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            SELECT u.user_id, u.name, u.email, u.phone, u.role_id, u.status, u.created_at,
+                   r.role_name
+            FROM users u
+            JOIN roles r ON u.role_id = r.role_id
+            WHERE u.status = 'PENDING'
+            ORDER BY u.created_at ASC
+        """)
+        return cur.fetchall()
+
+
+def create_user(conn, name, email, password_hash, role_id, phone=None):
     """
     Inserts user into database and returns new user_id
     """
     with conn.cursor() as cur:
         cur.execute("""
-            INSERT INTO users (name, email, password, role_id)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO users (name, email, password, role_id, phone)
+            VALUES (%s, %s, %s, %s, %s)
             RETURNING user_id
-        """, (name, email, password_hash, role_id))
+        """, (name, email, password_hash, role_id, phone))
 
         result = cur.fetchone()
 
@@ -35,7 +65,7 @@ def get_user_by_id(conn, user_id):
     """
     with conn.cursor() as cur:
         cur.execute("""
-            SELECT user_id, name, email, role_id, status
+            SELECT user_id, name, email, phone, role_id, status
             FROM users
             WHERE user_id = %s
         """, (user_id,))
