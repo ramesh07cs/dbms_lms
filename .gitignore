@@ -4,10 +4,10 @@ __pycache__/
 *.pyo
 
 # Virtual environment
-lms_env/
+updated_env/
 venv/
 .venv/
-updated_env/
+
 
 # Environment variables
 .env
