@@ -2,7 +2,7 @@
 
 from flask import Flask
 from flask_jwt_extended import JWTManager
-from flask_cors import CORS   # ✅ ADD THIS
+from flask_cors import CORS   
 from app.config import Config
 from app.models.db import close_db, get_db
 from app.routes.user_routes import user_bp
