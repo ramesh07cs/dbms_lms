@@ -11,6 +11,7 @@ from app.routes.borrow_routes import borrow_bp
 from app.routes.reservation_routes import reservation_bp
 from app.routes.fine_routes import fine_bp
 from app.routes.audit_routes import audit_bp
+from app.routes.stats_routes import stats_bp
 from app.utils.token_blacklist import is_token_blacklisted
 from app.utils.error_handlers import register_error_handlers
 
@@ -69,6 +70,7 @@ def create_app():
     app.register_blueprint(reservation_bp, url_prefix="/reservation")
     app.register_blueprint(fine_bp, url_prefix="/fine")
     app.register_blueprint(audit_bp, url_prefix="/admin/audit")
+    app.register_blueprint(stats_bp, url_prefix="/stats")
 
     # ==========================
     # Home Route
