@@ -2,6 +2,7 @@
 
 from flask import Flask
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS   # ✅ ADD THIS
 from app.config import Config
 from app.models.db import close_db, get_db
 from app.routes.user_routes import user_bp
@@ -19,6 +20,15 @@ def create_app():
     app.config.from_object(Config)
 
     # ==========================
+    # Enable CORS  ✅ ADD THIS BLOCK
+    # ==========================
+    CORS(
+        app,
+        supports_credentials=True,
+        resources={r"/*": {"origins": "*"}}  # allow all origins (dev only)
+    )
+
+    # ==========================
     # Initialize JWT
     # ==========================
     jwt = JWTManager(app)
@@ -26,7 +36,7 @@ def create_app():
     @jwt.token_in_blocklist_loader
     def check_if_token_revoked(jwt_header, jwt_payload):
         return is_token_blacklisted(jwt_payload["jti"])
-    
+
     # ==========================
     # Database Test Route
     # ==========================
