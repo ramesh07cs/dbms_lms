@@ -5,6 +5,7 @@ from app.models.user_queries import (
     get_pending_users,
     update_user_status,
 )
+from app.services.audit_service import log_action
 
 
 def register_user(conn, name, email, password, role_id, phone=None):
@@ -27,6 +28,13 @@ def register_user(conn, name, email, password, role_id, phone=None):
 
         # Create user
         user_id = create_user(conn, name, email, hashed_password, role_id, phone)
+        log_action(
+            conn, user_id,
+            action="User Registered",
+            table_name="USER",
+            record_id=user_id,
+            description=f"New user registered: {email}",
+        )
 
         # Commit transaction
         conn.commit()
@@ -68,4 +76,11 @@ def approve_or_reject_user(conn, user_id, status, approved_by):
     if status not in ("APPROVED", "REJECTED"):
         raise ValueError("Status must be APPROVED or REJECTED")
     update_user_status(conn, user_id, status, approved_by)
+    log_action(
+        conn, approved_by,
+        action="User Approved" if status == "APPROVED" else "User Rejected",
+        table_name="USER",
+        record_id=user_id,
+        description=f"User {user_id} status set to {status}",
+    )
     conn.commit()

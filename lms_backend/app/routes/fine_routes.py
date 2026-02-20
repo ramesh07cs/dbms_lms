@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.utils.decorators import admin_required
 from app.models.db import get_db
-from app.services.fine_service import pay_fine, get_my_unpaid_fines, get_all_fines_admin
+from app.services.fine_service import pay_fine, get_my_unpaid_fines, get_my_fines_with_book, get_all_fines_admin
 
 fine_bp = Blueprint("fine", __name__)
 
@@ -24,16 +24,13 @@ def all_fines():
 @jwt_required()
 def my_fines():
     page = int(request.args.get("page", 1))
-
     current_user = get_jwt_identity()
     user_id = current_user.get("id")
-
     conn = get_db()
     try:
-        fines = get_my_unpaid_fines(conn, user_id, page)
+        fines = get_my_fines_with_book(conn, user_id, page)
         return jsonify(fines)
     finally:
-        # request-scoped connection closed by teardown
         pass
 
 

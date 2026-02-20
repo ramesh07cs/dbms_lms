@@ -24,6 +24,22 @@ def get_user_unpaid_fines(conn, user_id, limit=20, offset=0):
         return cur.fetchall()
 
 
+def get_user_fines_with_book(conn, user_id, limit=50, offset=0):
+    """All fines for user with book title (for My Fines page)."""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            SELECT f.fine_id, f.borrow_id, f.amount, f.paid_status, f.paid_date, f.created_at,
+                   bk.title AS book_title
+            FROM fines f
+            JOIN borrows b ON b.borrow_id = f.borrow_id
+            JOIN books bk ON bk.book_id = b.book_id
+            WHERE f.user_id = %s
+            ORDER BY f.created_at DESC
+            LIMIT %s OFFSET %s
+        """, (user_id, limit, offset))
+        return cur.fetchall()
+
+
 def mark_fine_paid(conn, fine_id):
     with conn.cursor() as cur:
         cur.execute("""

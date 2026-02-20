@@ -69,7 +69,7 @@ def create_app():
     app.register_blueprint(borrow_bp, url_prefix="/borrow")
     app.register_blueprint(reservation_bp, url_prefix="/reservation")
     app.register_blueprint(fine_bp, url_prefix="/fine")
-    app.register_blueprint(audit_bp, url_prefix="/audit")
+    app.register_blueprint(audit_bp, url_prefix="/admin/audit")
     app.register_blueprint(stats_bp, url_prefix="/stats")
 
     # ==========================

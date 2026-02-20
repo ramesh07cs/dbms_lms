@@ -14,6 +14,19 @@ def get_approved_users_for_borrow(conn):
         return cur.fetchall()
 
 
+def get_students_for_borrow(conn):
+    """Returns approved students only (for teacher issue dropdown)."""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            SELECT u.user_id, u.name, u.email, r.role_name
+            FROM users u
+            JOIN roles r ON u.role_id = r.role_id
+            WHERE u.status = 'APPROVED' AND u.role_id = 3
+            ORDER BY u.name
+        """)
+        return cur.fetchall()
+
+
 def get_pending_users(conn):
     """Returns list of users with status PENDING."""
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
@@ -63,13 +76,46 @@ def get_user_by_id(conn, user_id):
     """
     Returns user dictionary by user_id
     """
-    with conn.cursor() as cur:
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
             SELECT user_id, name, email, phone, role_id, status
             FROM users
             WHERE user_id = %s
         """, (user_id,))
         return cur.fetchone()
+
+
+def get_all_users(conn):
+    """Returns all users with role name (for admin User Management)."""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            SELECT u.user_id, u.name, u.email, u.phone, u.status, u.created_at,
+                   r.role_name, u.role_id
+            FROM users u
+            JOIN roles r ON u.role_id = r.role_id
+            ORDER BY u.name
+        """)
+        return cur.fetchall()
+
+
+def get_teachers_and_students(conn):
+    """Returns teachers and students only (for teacher View Users)."""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute("""
+            SELECT u.user_id, u.name, u.email, u.phone, u.status,
+                   r.role_name, u.role_id
+            FROM users u
+            JOIN roles r ON u.role_id = r.role_id
+            WHERE u.role_id IN (2, 3)
+            ORDER BY r.role_name, u.name
+        """)
+        return cur.fetchall()
+
+
+def delete_user(conn, user_id):
+    """Delete a user by id. Caller must ensure no critical dependencies."""
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM users WHERE user_id = %s", (user_id,))
 
 
 def update_user_status(conn, user_id, status, approved_by=None):

@@ -3,7 +3,7 @@ def mark_overdue_borrows(conn):
         cur.execute("""
             UPDATE borrows
             SET borrow_status = 'OVERDUE'
-            WHERE borrow_status = 'BORROWED'
+            WHERE borrow_status = 'ACTIVE'
               AND due_date < NOW()
         """)
     conn.commit()

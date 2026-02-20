@@ -1,7 +1,8 @@
 from psycopg2.extras import RealDictCursor
 
 
-def create_book(conn, title, author, isbn, total_copies, category=None):
+def create_book(conn, title, author, isbn, total_copies, category=None, available_copies=None):
+    avail = int(available_copies) if available_copies is not None else int(total_copies)
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
             """
@@ -9,7 +10,7 @@ def create_book(conn, title, author, isbn, total_copies, category=None):
             VALUES (%s, %s, %s, %s, %s, %s)
             RETURNING book_id;
             """,
-            (title, author, isbn, total_copies, total_copies, category)
+            (title, author, isbn, total_copies, avail, category)
         )
         return cur.fetchone()["book_id"]
 
@@ -18,16 +19,6 @@ def get_book_by_id(conn, book_id):
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
             "SELECT * FROM books WHERE book_id = %s AND is_active = TRUE;",
-            (book_id,)
-        )
-        return cur.fetchone()
-
-
-def get_book_by_id_for_update(conn, book_id):
-    """Lock book row for update (transaction-safe)."""
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute(
-            "SELECT * FROM books WHERE book_id = %s AND is_active = TRUE FOR UPDATE;",
             (book_id,)
         )
         return cur.fetchone()
@@ -62,16 +53,7 @@ def get_all_books(conn):
         return cur.fetchall()
 
 
-def get_unavailable_books(conn):
-    """Books with available_copies = 0 (for reservation page)."""
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute(
-            "SELECT * FROM books WHERE is_active = TRUE AND available_copies = 0;"
-        )
-        return cur.fetchall()
-
-
-def update_book(conn, book_id, title=None, author=None, category=None, isbn=None, total_copies=None):
+def update_book(conn, book_id, title=None, author=None, category=None, isbn=None, total_copies=None, available_copies=None):
     """Update book fields. Only non-None fields are updated."""
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         updates = []
@@ -89,8 +71,11 @@ def update_book(conn, book_id, title=None, author=None, category=None, isbn=None
             updates.append("isbn = %s")
             params.append(isbn)
         if total_copies is not None:
-            updates.append("total_copies = %s, available_copies = LEAST(available_copies, %s)")
-            params.extend([total_copies, total_copies])
+            updates.append("total_copies = %s")
+            params.append(total_copies)
+        if available_copies is not None:
+            updates.append("available_copies = %s")
+            params.append(available_copies)
         if not updates:
             return
         params.append(book_id)

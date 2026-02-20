@@ -8,7 +8,7 @@ def get_admin_stats(conn):
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
             SELECT
-                (SELECT COUNT(*) FROM borrows WHERE borrow_status = 'ISSUED') AS total_issued_books,
+                (SELECT COUNT(*) FROM borrows WHERE borrow_status = 'ACTIVE') AS total_issued_books,
                 (SELECT COALESCE(SUM(available_copies), 0)::int FROM books WHERE is_active = TRUE) AS total_available_books,
                 (SELECT COUNT(*) FROM users WHERE role_id = 3 AND status = 'APPROVED') AS total_students,
                 (SELECT COUNT(*) FROM users WHERE role_id = 2 AND status = 'APPROVED') AS total_teachers,
@@ -22,7 +22,7 @@ def get_teacher_stats(conn, user_id):
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
             SELECT COUNT(*) AS issued_count
-            FROM borrows WHERE user_id = %s AND borrow_status = 'ISSUED'
+            FROM borrows WHERE user_id = %s AND borrow_status = 'ACTIVE'
         """, (user_id,))
         issued = cur.fetchone()["issued_count"]
 
@@ -30,7 +30,7 @@ def get_teacher_stats(conn, user_id):
             SELECT b.borrow_id, b.book_id, b.due_date, bk.title, bk.author
             FROM borrows b
             JOIN books bk ON b.book_id = bk.book_id
-            WHERE b.user_id = %s AND b.borrow_status = 'ISSUED'
+            WHERE b.user_id = %s AND b.borrow_status = 'ACTIVE'
               AND b.due_date::date = CURRENT_DATE
             ORDER BY b.due_date
         """, (user_id,))
@@ -40,7 +40,7 @@ def get_teacher_stats(conn, user_id):
             SELECT b.borrow_id, b.book_id, b.due_date, bk.title, bk.author
             FROM borrows b
             JOIN books bk ON b.book_id = bk.book_id
-            WHERE b.user_id = %s AND b.borrow_status = 'ISSUED'
+            WHERE b.user_id = %s AND b.borrow_status = 'ACTIVE'
               AND b.due_date < NOW()
             ORDER BY b.due_date
         """, (user_id,))
@@ -59,7 +59,7 @@ def get_student_stats(conn, user_id):
     soon_end = datetime.utcnow() + timedelta(days=soon_days)
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute("""
-            SELECT COUNT(*) AS count FROM borrows WHERE user_id = %s AND borrow_status = 'ISSUED'
+            SELECT COUNT(*) AS count FROM borrows WHERE user_id = %s AND borrow_status = 'ACTIVE'
         """, (user_id,))
         borrowed = cur.fetchone()["count"]
 
@@ -67,7 +67,7 @@ def get_student_stats(conn, user_id):
             SELECT b.borrow_id, b.book_id, b.due_date, bk.title, bk.author
             FROM borrows b
             JOIN books bk ON b.book_id = bk.book_id
-            WHERE b.user_id = %s AND b.borrow_status = 'ISSUED'
+            WHERE b.user_id = %s AND b.borrow_status = 'ACTIVE'
               AND b.due_date >= NOW() AND b.due_date <= %s
             ORDER BY b.due_date
         """, (user_id, soon_end))

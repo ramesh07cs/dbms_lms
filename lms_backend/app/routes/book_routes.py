@@ -1,12 +1,12 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.utils.decorators import admin_required
 from app.models.db import get_db
+from app.services.audit_service import log_action
 from app.services.book_service import (
     add_book,
     fetch_book,
     fetch_all_books,
-    fetch_unavailable_books,
     change_book_copies,
     update_book_details,
     remove_book,
@@ -31,8 +31,12 @@ def create_book_route():
             author=data.get("author"),
             isbn=data.get("isbn"),
             total_copies=data.get("total_copies"),
-            category=data.get("category")
+            category=data.get("category"),
+            available_copies=data.get("available_copies"),
         )
+        admin = get_jwt_identity()
+        log_action(conn, admin["id"], "Book Created", "BOOK", book_id, f"Book created: {data.get('title')}")
+        conn.commit()
         return jsonify({"message": "Book created successfully", "book_id": book_id}), 201
 
     except ValueError as e:
@@ -58,24 +62,13 @@ def update_book_copies_route(book_id):
             book_id,
             data.get("available_copies")
         )
+        admin = get_jwt_identity()
+        log_action(conn, admin["id"], "Available Copies Updated", "BOOK", book_id, f"Available copies set to {data.get('available_copies')}")
+        conn.commit()
         return jsonify({"message": "Book copies updated successfully"}), 200
 
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
-    except Exception as e:
-        print(e)
-        return jsonify({"error": "Internal server error"}), 500
-
-
-# =========================
-# PUBLIC: GET UNAVAILABLE BOOKS (for reservation page)
-# =========================
-@book_bp.route("/unavailable", methods=["GET"])
-def get_unavailable_books_route():
-    conn = get_db()
-    try:
-        books = fetch_unavailable_books(conn)
-        return jsonify(books), 200
     except Exception as e:
         print(e)
         return jsonify({"error": "Internal server error"}), 500
@@ -113,7 +106,11 @@ def update_book_route(book_id):
             category=data.get("category"),
             isbn=data.get("isbn"),
             total_copies=data.get("total_copies"),
+            available_copies=data.get("available_copies"),
         )
+        admin = get_jwt_identity()
+        log_action(conn, admin["id"], "Book Updated", "BOOK", book_id, f"Book {book_id} updated")
+        conn.commit()
         return jsonify({"message": "Book updated successfully"}), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
@@ -131,6 +128,9 @@ def delete_book_route(book_id):
     conn = get_db()
     try:
         remove_book(conn, book_id)
+        admin = get_jwt_identity()
+        log_action(conn, admin["id"], "Book Deleted", "BOOK", book_id, f"Book {book_id} soft-deleted")
+        conn.commit()
         return jsonify({"message": "Book deleted successfully"}), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 400

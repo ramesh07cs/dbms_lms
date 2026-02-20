@@ -9,10 +9,10 @@ from psycopg2.extras import RealDictCursor
 def create_reservation(conn, user_id, book_id, expiry_days=3):
     """
     Create a new reservation for a user with optional expiry (default 3 days).
-    Returns reservation_id. Prevents duplicate active reservation (unique index).
+    Returns reservation_id.
     """
     expiry_date = datetime.utcnow() + timedelta(days=expiry_days)
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+    with conn.cursor() as cur:
         cur.execute("""
             INSERT INTO reservations (user_id, book_id, reservation_date, expiry_date, reservation_status)
             VALUES (%s, %s, NOW(), %s, 'ACTIVE')
@@ -31,7 +31,7 @@ def get_oldest_active_reservation(conn, book_id):
     Uses FOR UPDATE to prevent race conditions during auto-assign.
     Returns reservation dict or None.
     """
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+    with conn.cursor() as cur:
         cur.execute("""
             SELECT reservation_id, user_id
             FROM reservations
@@ -42,24 +42,6 @@ def get_oldest_active_reservation(conn, book_id):
             FOR UPDATE
         """, (book_id,))
         return cur.fetchone()
-
-
-def get_first_reserved_user_id(conn, book_id):
-    """
-    Get user_id of first in reservation queue, or None if no ACTIVE reservations.
-    Does NOT lock - use after locking book row.
-    """
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        cur.execute("""
-            SELECT user_id
-            FROM reservations
-            WHERE book_id = %s
-              AND reservation_status = 'ACTIVE'
-            ORDER BY reservation_date ASC
-            LIMIT 1
-        """, (book_id,))
-        row = cur.fetchone()
-        return row["user_id"] if row else None
 
 
 # =====================================================

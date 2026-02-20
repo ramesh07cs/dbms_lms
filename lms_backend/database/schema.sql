@@ -58,14 +58,14 @@ CREATE TABLE IF NOT EXISTS borrows (
     issue_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     due_date TIMESTAMP NOT NULL,
     return_date TIMESTAMP,
-    borrow_status VARCHAR(20) DEFAULT 'ISSUED'
-        CHECK (borrow_status IN ('ISSUED', 'RETURNED', 'OVERDUE'))
+    borrow_status VARCHAR(20) DEFAULT 'PENDING'
+        CHECK (borrow_status IN ('PENDING', 'ACTIVE', 'RETURNED', 'REJECTED', 'OVERDUE'))
 );
 
 -- Prevent same user borrowing same book twice without returning
 CREATE UNIQUE INDEX IF NOT EXISTS unique_active_borrow
 ON borrows(user_id, book_id)
-WHERE borrow_status = 'ISSUED';
+WHERE borrow_status = 'ACTIVE';
 
 
 -- =========================

@@ -18,9 +18,9 @@ pip-wheel-metadata/
 venv/
 env/
 .venv/
-updated_env/
+myenv/
 # Project-specific virtualenvs
-lms_backend/updated_env/
+lms_backend/myenv/
 
 # Environment variables / secrets
 .env

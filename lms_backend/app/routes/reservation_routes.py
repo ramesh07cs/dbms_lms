@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.utils.decorators import admin_required
 from app.models.db import get_db
+from app.models.book_queries import get_book_by_id
 from app.models.reservation_queries import (
     create_reservation,
     expire_overdue_reservations,
@@ -49,14 +50,18 @@ def create_new_reservation():
 
     try:
         expire_overdue_reservations(conn)
+        book = get_book_by_id(conn, book_id)
+        if not book:
+            return jsonify({"error": "Book not found"}), 400
+        if book.get("available_copies", 0) > 0:
+            return jsonify({"error": "Reserve only when no copies available. Use Request Borrow instead."}), 400
 
         reservation_id = create_reservation(conn, user_id, book_id)
 
         log_action(
-            conn,
-            user_id,
-            action="CREATE_RESERVATION",
-            table_name="reservations",
+            conn, user_id,
+            action="Reservation Created",
+            table_name="RESERVATION",
             record_id=reservation_id,
             description=f"User {user_id} reserved book {book_id}"
         )
@@ -100,6 +105,13 @@ def cancel_reservation(reservation_id):
                 WHERE reservation_id = %s
             """, (reservation_id,))
 
+        log_action(
+            conn, current_user.get("id"),
+            action="Reservation Cancelled",
+            table_name="RESERVATION",
+            record_id=reservation_id,
+            description=f"Reservation {reservation_id} cancelled",
+        )
         conn.commit()
         return jsonify({"message": "Reservation cancelled"})
 
