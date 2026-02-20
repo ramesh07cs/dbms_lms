@@ -1,81 +1,192 @@
-# 📚 Library Management System (LMS) Backend
+# Library Management System (LMS)
 
-A Flask-based backend for a Library Management System built using **Raw SQL (no ORM)** and PostgreSQL.
-
----
-
-## 🚀 Features
-
-- User Registration & Login
-- Role-based system (Admin, Teacher, Student)
-- Book Management
-- Borrow & Return System
-- Transaction Handling
-- Clean Layered Architecture
-- Password Hashing (Secure Storage)
+A full-stack Library Management System for **Tribhuvan University, Thapathali Campus** built with Flask (Python) and React.
 
 ---
 
-## 🏗 Architecture
+## Overview
 
-Client → Routes → Services → Query Layer → PostgreSQL
-
-- **Routes** → API Endpoints
-- **Services** → Business Logic
-- **Models (Query Layer)** → Raw SQL Queries
-- **Database** → PostgreSQL
+The LMS manages library operations including user registration, book catalog, borrowing, returns, reservations with auto-assignment, fine management, and audit logging. It supports three roles: **Admin**, **Teacher**, and **Student**.
 
 ---
 
-## 🛠 Tech Stack
+## Features
 
-- Python (Flask)
-- PostgreSQL
-- psycopg2
-- Raw SQL
-- python-dotenv
-- werkzeug (password hashing)
+### Authentication & Roles
+
+- JWT-based authentication (token in memory, no localStorage)
+- Three roles: Admin (`role_id=1`), Teacher (`role_id=2`), Student (`role_id=3`)
+- User registration (status starts as PENDING; admin must approve)
+- Admin can approve or reject pending registrations
+
+### Admin Panel
+
+- **Dashboard** — Stats: Total Issued Books, Available Books, Students, Teachers, Fine Collected
+- **Verify Users** — List and approve/reject pending registrations
+- **Manage Books** — Add, Edit, Delete books (title, author, category, ISBN, total copies)
+- **Issue Book** — Assign a book to any approved user
+- **Return Book** — Process returns (shows fine if applicable)
+- **All Reservations** — View all reservations
+- **Fine Management** — List fines, mark as paid
+- **Audit Logs** — View all audit activity
+
+### Teacher Panel
+
+- **Dashboard** — Issued books count, due today, overdue list
+- **Available Books** — Borrow books (available copies > 0)
+- **View Books** — Full book catalog
+- **Borrowed Books** — Return borrowed books
+- **Reservations** — Reserve unavailable books
+
+### Student Panel
+
+- **Dashboard** — Currently borrowed, due soon, total fines, active reservations
+- **Available Books** — Borrow books (available copies > 0)
+- **View Books** — Full catalog
+- **Borrowed Books** — View and return borrowed books
+- **Reservations** — Reserve unavailable books (join waiting queue)
+- **My Fines** — View unpaid fines
+
+### Reservation System
+
+- **Reservation priority** — If a book has ACTIVE reservations, only the first user in queue can borrow; others receive "Book reserved by another user"
+- **Auto-assignment** — When a book is returned, it is automatically issued to the first user in the reservation queue
+- FIFO queue with expiry handling
 
 ---
 
-## 📂 Project Structure
+## Tech Stack
 
-Project root
-- `app/` — application code (routes, services, models)
-  - `models/` — DB connection and raw SQL query modules
-  - `routes/` — Flask blueprints / endpoints
-  - `services/` — business logic
-- `database/`
-  - `schema.sql` — **database schema and seeds** (moved here from `app/models`)
-- `run.py` — start the Flask app
-- `requirements.txt` — Python dependencies
-- `.env.example` — example environment variables
+| Layer     | Technology                    |
+|-----------|-------------------------------|
+| Backend   | Python, Flask, PostgreSQL     |
+| Database  | Raw SQL (psycopg2, RealDictCursor) |
+| Frontend  | React 18, Vite                |
+| Styling   | TailwindCSS                   |
+| Auth      | JWT (Flask-JWT-Extended)      |
+| API       | REST, Axios                   |
 
 ---
 
-## 🗂 Database schema (important) 🔧
-- The SQL schema file is now located at `database/schema.sql`. If you previously referenced `app/models/schema.sql`, update your scripts or documentation.
-- The Flask app does **not** load `schema.sql` at runtime; it only manages DB connections (see `app/models/db.py`).
+## Project Structure
 
-How to apply the schema manually:
-
-```bash
-psql -h <host> -U <user> -d <database> -f database/schema.sql
+```
+dbms_lms/
+├── README.md           # This file
+├── INSTALLATION.md     # Detailed setup guide
+├── setup_guide.txt     # Quick reference
+├── lms_backend/        # Flask API
+│   ├── app/
+│   │   ├── models/     # DB queries
+│   │   ├── routes/     # API endpoints
+│   │   ├── services/   # Business logic
+│   │   ├── schemas/    # Validation
+│   │   └── utils/      # Decorators, error handlers
+│   ├── database/
+│   │   └── schema.sql  # DB schema & seeds
+│   ├── run.py          # Start server
+│   ├── init_database.py
+│   └── .env.example
+└── lms_frontend/       # React app
+    ├── src/
+    │   ├── api/        # API services
+    │   ├── context/    # Auth context
+    │   ├── layouts/    # Sidebar layouts
+    │   ├── pages/      # Route components
+    │   └── components/
+    ├── package.json
+    └── vite.config.js
 ```
 
-Use this when creating or resetting the database locally or in CI.
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.8+
+- Node.js 16+
+- PostgreSQL (or [Neon](https://neon.tech) for cloud DB)
+
+### 1. Database Setup
+
+Create a PostgreSQL database and apply the schema:
+
+```bash
+psql -h <host> -U <user> -d <database> -f lms_backend/database/schema.sql
+```
+
+### 2. Backend Setup
+
+```bash
+cd lms_backend
+cp .env.example .env
+# Edit .env and set DATABASE_URL
+pip install -r requirements.txt
+python init_database.py
+python run.py
+```
+
+Backend runs at **http://localhost:5000**
+
+### 3. Frontend Setup
+
+```bash
+cd lms_frontend
+npm install
+npm run dev
+```
+
+Frontend runs at **http://localhost:5173**
+
+### 4. Access
+
+Open http://localhost:5173 in a browser.
+
+**Default admin** (after `init_database.py`):
+
+- Email: `admin@example.com`
+- Password: `admin123`
+
+⚠️ Change the password after first login.
 
 ---
 
-## 🚀 Run locally
-1. Copy `.env.example` → `.env` and set DB credentials.
-2. Activate virtualenv: `lms_env\Scripts\activate` (Windows).
-3. Install deps: `pip install -r requirements.txt`.
-4. Start server: `python run.py`.
+## API Overview
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/users/login` | Login |
+| POST | `/users/register` | Register |
+| POST | `/users/logout` | Logout |
+| GET | `/users/pending` | List pending users (admin) |
+| POST | `/users/approve/<id>` | Approve user (admin) |
+| GET | `/books/` | List all books |
+| GET | `/books/unavailable` | Books with no copies |
+| POST | `/borrow/issue` | Borrow book (student/teacher) |
+| POST | `/borrow/return` | Return book |
+| GET | `/borrow/my/active` | My active borrows |
+| POST | `/reservation/create` | Create reservation |
+| DELETE | `/reservation/cancel/<id>` | Cancel reservation |
+| GET | `/fine/my` | My unpaid fines |
+| GET | `/audit/my-logs` | My audit logs |
+| GET | `/audit/all` | All audit logs (admin) |
+
+See `INSTALLATION.md` for the complete API reference.
 
 ---
 
-## 💡 Notes
-- Moving `schema.sql` only affects setup/automation that reference the file path; the runtime DB connection will not be affected.
-- I can update other docs or CI scripts that still point to the old path — tell me which files to change.
+## Security
 
+- JWT tokens stored in memory only (not localStorage)
+- Role-based access control
+- Students/Teachers cannot issue books for other users
+- Only Admin can issue books for any user
+- Password hashing (Werkzeug)
+- Parameterized SQL (SQL injection prevention)
+
+---
+
+## License
+
+This project is for educational purposes (Tribhuvan University, Thapathali Campus).

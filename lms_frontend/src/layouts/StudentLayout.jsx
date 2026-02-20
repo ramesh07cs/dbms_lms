@@ -6,6 +6,7 @@ const navItems = [
   { to: '/student/available', label: 'Available Books', icon: '📚' },
   { to: '/student/books', label: 'View Books', icon: '📖' },
   { to: '/student/borrowed', label: 'Borrowed Books', icon: '📥' },
+  { to: '/student/reservations', label: 'Reservations', icon: '📋' },
   { to: '/student/fines', label: 'My Fines', icon: '💰' },
 ]
 

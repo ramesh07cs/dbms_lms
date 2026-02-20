@@ -1,257 +1,186 @@
 ================================================================================
-LIBRARY MANAGEMENT SYSTEM - COMPLETE SETUP GUIDE
+LIBRARY MANAGEMENT SYSTEM (LMS) - QUICK SETUP GUIDE
+Tribhuvan University, Thapathali Campus
 ================================================================================
 
-PROJECT STRUCTURE:
-------------------
-backend/           Flask REST API with PostgreSQL
-frontend/          React.js web application
+PROJECT STRUCTURE
+-----------------
+dbms_lms/
+  lms_backend/      Flask REST API + PostgreSQL
+  lms_frontend/     React + Vite web application
 
 ================================================================================
-BACKEND SETUP (Python/Flask/PostgreSQL)
+PREREQUISITES
+================================================================================
+  - Python 3.8+
+  - Node.js 16+
+  - PostgreSQL 12+ (or Neon: https://neon.tech)
+
+================================================================================
+DATABASE SETUP
 ================================================================================
 
-1. PREREQUISITES:
-   - Python 3.8+
-   - pip
-   - Database: Neon (recommended) or Local PostgreSQL
+1. Create PostgreSQL database (local or Neon)
 
-2. GET DATABASE (NEON - RECOMMENDED):
-   - Sign up at https://neon.tech (free, 2 minutes)
-   - Create project "library-management"
-   - Copy connection string (looks like):
-     postgresql://user:pass@ep-xxx.region.aws.neon.tech/neondb?sslmode=require
+2. Apply schema:
+   psql -h <host> -U <user> -d <database> -f lms_backend/database/schema.sql
 
-3. INSTALL DEPENDENCIES:
-   cd backend
+   For Neon: use their SQL Editor or:
+   psql "postgresql://user:pass@host/db?sslmode=require" -f lms_backend/database/schema.sql
+
+================================================================================
+BACKEND SETUP
+================================================================================
+
+1. Go to backend:
+   cd lms_backend
+
+2. Create virtual env (recommended):
+   python -m venv lms_env
+   lms_env\Scripts\activate          (Windows)
+   source lms_env/bin/activate       (Linux/macOS)
+
+3. Install dependencies:
    pip install -r requirements.txt
 
-4. CONFIGURE DATABASE:
+4. Configure:
    cp .env.example .env
-   
-   Edit .env and set:
-   DATABASE_URL=your_neon_connection_string_here
-   
-   OR for local PostgreSQL:
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_NAME=library_db
-   DB_USER=postgres
-   DB_PASSWORD=your_password
+   Edit .env:
+     DATABASE_URL=postgresql://user:pass@host:5432/dbname
+     SECRET_KEY=your-secret
+     JWT_SECRET_KEY=your-jwt-secret
 
-5. SETUP DATABASE:
-   python setup_db.py
-   
-   This creates:
-   - Database tables
-   - Default admin user (admin@library.com / admin123)
+5. Initialize (creates admin user):
+   python init_database.py
 
-6. START BACKEND:
-   python app.py
-   
-   Backend runs on: http://localhost:5000
+6. Start backend:
+   python run.py
 
-7. TEST BACKEND:
-   python test_api.py
+   Backend: http://localhost:5000
 
 ================================================================================
-FRONTEND SETUP (React.js)
+FRONTEND SETUP
 ================================================================================
 
-1. PREREQUISITES:
-   - Node.js 16+
-   - npm or yarn
+1. Go to frontend:
+   cd lms_frontend
 
-2. INSTALL DEPENDENCIES:
-   cd frontend
+2. Install:
    npm install
 
-3. START FRONTEND:
+3. Start:
    npm run dev
-   
-   Frontend runs on: http://localhost:3000
 
-4. BUILD FOR PRODUCTION:
-   npm run build
+   Frontend: http://localhost:5173
 
 ================================================================================
 QUICK START (Both Services)
 ================================================================================
 
-Terminal 1 (Backend):
-   cd backend
-   python app.py
+Terminal 1:
+   cd lms_backend
+   python run.py
 
-Terminal 2 (Frontend):
-   cd frontend
+Terminal 2:
+   cd lms_frontend
    npm run dev
 
-Access: http://localhost:3000
+Open: http://localhost:5173
 
 ================================================================================
-DEFAULT CREDENTIALS
+DEFAULT ADMIN
 ================================================================================
 
-Admin Account:
-   Email: admin@library.com
-   Password: admin123
+Email:    admin@example.com
+Password: admin123
 
-⚠️ CHANGE PASSWORD AFTER FIRST LOGIN!
-
-================================================================================
-USER ROLES & FEATURES
-================================================================================
-
-STUDENT:
-   - Browse books
-   - View my borrows and fines
-   - Create book reservations
-
-TEACHER:
-   - All student features
-   - Issue/return books
-   - View all borrows
-
-ADMIN:
-   - All teacher features
-   - Approve pending users
-   - Full book management (CRUD)
-   - View audit logs
+⚠ CHANGE PASSWORD AFTER FIRST LOGIN!
 
 ================================================================================
-API ENDPOINTS
+USER ROLES
 ================================================================================
 
-Authentication:
-   POST /auth/register        - Register new user
-   POST /auth/login          - Login and get JWT token
+ADMIN (role_id=1):
+   - Verify users, manage books, issue/return for any user
+   - Fine management, audit logs, dashboard stats
+
+TEACHER (role_id=2):
+   - Dashboard, Available Books (borrow), View Books
+   - Borrowed Books (return), Reservations (reserve)
+   - Same flow as Student
+
+STUDENT (role_id=3):
+   - Dashboard, Available Books (borrow), View Books
+   - Borrowed Books (return), Reservations (reserve)
+   - My Fines
+
+New users register with status PENDING; Admin must approve.
+
+================================================================================
+KEY API ENDPOINTS
+================================================================================
+
+Auth:
+   POST /users/login          - Login
+   POST /users/register       - Register
+   POST /users/logout         - Logout
 
 Books:
-   GET /api/books            - List all books
-   GET /api/books/{id}       - Get book details
+   GET  /books/               - All books
+   GET  /books/unavailable    - Books with 0 copies
+   POST /books/               - Add (admin)
+   PUT  /books/<id>           - Update (admin)
+   DELETE /books/<id>         - Delete (admin)
 
-Borrows:
-   POST /api/borrows/issue   - Issue book (Admin/Teacher)
-   POST /api/borrows/return  - Return book (Admin/Teacher)
-   GET /api/borrows          - List borrows
-
-User:
-   GET /api/users/me         - Get profile
-   GET /api/users/me/borrows - Get my borrows
-   GET /api/users/me/fines   - Get my fines
+Borrow:
+   POST /borrow/issue         - Borrow (body: {book_id})
+   POST /borrow/return        - Return (body: {book_id})
+   GET  /borrow/my/active     - My active borrows
+   GET  /borrow/my/history    - Borrow history
 
 Reservations:
-   POST /api/reservations    - Create reservation
-   GET /api/reservations     - List reservations
-   PUT /api/reservations/{id}/cancel - Cancel reservation
+   POST   /reservation/create - Create (body: {book_id})
+   DELETE /reservation/cancel/<id>
+   GET    /reservation/my
 
-Admin:
-   GET /api/admin/users/pending      - List pending users
-   PUT /api/admin/users/{id}/approve - Approve user
-   POST/PUT/DELETE /api/admin/books  - Manage books
-   GET /api/admin/auditlog           - View audit log
+Fines:
+   GET  /fine/my              - My unpaid fines
+   GET  /fine/all             - All (admin)
+   POST /fine/pay/<id>        - Mark paid (admin)
 
-================================================================================
-TROUBLESHOOTING
-================================================================================
+Audit:
+   GET /audit/my-logs         - My logs
+   GET /audit/all             - All (admin)
 
-Backend Issues:
-   - Database connection error: Check PostgreSQL is running
-   - Module not found: Run pip install -r requirements.txt
-   - Port 5000 in use: Change port in app.py or kill process
-
-Frontend Issues:
-   - Cannot connect to API: Ensure backend is running on port 5000
-   - npm install fails: Try deleting node_modules and package-lock.json
-   - Port 3000 in use: Vite will auto-assign another port
-
-Database Issues:
-   - Run: python setup_db.py to recreate database
-   - Check credentials in backend/.env
-   - Verify PostgreSQL service is running
+Stats:
+   GET /stats/admin
+   GET /stats/teacher
+   GET /stats/student
 
 ================================================================================
 TECH STACK
 ================================================================================
 
-Backend:
-   - Python 3.8+
-   - Flask 3.0
-   - PostgreSQL 12+
-   - psycopg2 (raw SQL, no ORM)
-   - JWT authentication
-   - bcrypt password hashing
-
-Frontend:
-   - React 18
-   - React Router 6
-   - Axios
-   - Vite
-   - React Icons
-   - React Toastify
+Backend:  Python, Flask, PostgreSQL, psycopg2, JWT, werkzeug
+Frontend: React 18, Vite, TailwindCSS, Axios, React Router v6
 
 ================================================================================
-PROJECT STATISTICS
+TROUBLESHOOTING
 ================================================================================
 
-Backend:
-   - 19 Python files
-   - ~1,525 lines of code
-   - 8 API blueprints
-   - Raw SQL queries only
-
-Frontend:
-   - 23 React components
-   - Modern responsive UI
-   - Role-based navigation
-   - Full API integration
-
-Total: ~3,000+ lines of production code
+- Database error: Check DATABASE_URL in .env, ensure PostgreSQL is running
+- Module not found: pip install -r requirements.txt
+- Frontend can't reach API: Ensure backend runs on port 5000
+- User not approved: Admin must approve from Verify Users
+- Port in use: Kill process or change port in config
 
 ================================================================================
-DEVELOPMENT WORKFLOW
+FILES TO REFERENCE
 ================================================================================
 
-1. Register new user at: http://localhost:3000/register
-2. Login as admin to approve user
-3. Login with approved account
-4. Browse and interact with the system
-
-================================================================================
-PRODUCTION DEPLOYMENT
-================================================================================
-
-Backend:
-   - Use gunicorn or uwsgi
-   - Set DEBUG=False
-   - Use strong JWT secret
-   - Setup HTTPS
-   - Use PostgreSQL connection pooling
-
-Frontend:
-   - Run: npm run build
-   - Serve dist/ folder with nginx
-   - Configure API proxy
-   - Enable gzip compression
-
-================================================================================
-SECURITY FEATURES
-================================================================================
-
-✓ JWT token authentication
-✓ Bcrypt password hashing
-✓ SQL injection prevention (parameterized queries)
-✓ Role-based access control
-✓ CORS configuration
-✓ Complete audit logging
-✓ Transaction integrity (ACID)
-
-================================================================================
-SUPPORT & DOCUMENTATION
-================================================================================
-
-Backend Docs: backend/SETUP.txt
-Frontend Docs: frontend/README.md
-Database Schema: backend/database/schema.sql
+README.md         - Project overview
+INSTALLATION.md   - Full installation & API reference
+lms_backend/database/schema.sql - Database schema
+lms_backend/.env.example - Environment template
 
 ================================================================================

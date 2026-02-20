@@ -23,6 +23,16 @@ def get_book_by_id(conn, book_id):
         return cur.fetchone()
 
 
+def get_book_by_id_for_update(conn, book_id):
+    """Lock book row for update (transaction-safe)."""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+            "SELECT * FROM books WHERE book_id = %s AND is_active = TRUE FOR UPDATE;",
+            (book_id,)
+        )
+        return cur.fetchone()
+
+
 def get_book_by_isbn(conn, isbn):
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
@@ -48,6 +58,15 @@ def get_all_books(conn):
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         cur.execute(
             "SELECT * FROM books WHERE is_active = TRUE;"
+        )
+        return cur.fetchall()
+
+
+def get_unavailable_books(conn):
+    """Books with available_copies = 0 (for reservation page)."""
+    with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        cur.execute(
+            "SELECT * FROM books WHERE is_active = TRUE AND available_copies = 0;"
         )
         return cur.fetchall()
 

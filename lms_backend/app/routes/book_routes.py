@@ -6,6 +6,7 @@ from app.services.book_service import (
     add_book,
     fetch_book,
     fetch_all_books,
+    fetch_unavailable_books,
     change_book_copies,
     update_book_details,
     remove_book,
@@ -61,6 +62,20 @@ def update_book_copies_route(book_id):
 
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Internal server error"}), 500
+
+
+# =========================
+# PUBLIC: GET UNAVAILABLE BOOKS (for reservation page)
+# =========================
+@book_bp.route("/unavailable", methods=["GET"])
+def get_unavailable_books_route():
+    conn = get_db()
+    try:
+        books = fetch_unavailable_books(conn)
+        return jsonify(books), 200
     except Exception as e:
         print(e)
         return jsonify({"error": "Internal server error"}), 500
