@@ -1,248 +1,201 @@
-# 🚀 Library Management System - Installation Guide
+# Library Management System — Installation Guide
 
-Complete step-by-step guide to get your library management system running.
+Complete setup instructions for the LMS project.
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 1. [Prerequisites](#prerequisites)
-2. [Database Setup (Neon - Recommended)](#database-setup-neon---recommended)
-3. [Alternative: Local PostgreSQL](#alternative-local-postgresql)
-4. [Backend Setup](#backend-setup)
-5. [Frontend Setup](#frontend-setup)
-6. [Running the Application](#running-the-application)
+2. [Database Setup](#database-setup)
+3. [Backend Setup](#backend-setup)
+4. [Frontend Setup](#frontend-setup)
+5. [Running the Application](#running-the-application)
+6. [API Reference](#api-reference)
 7. [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Prerequisites
 
-Install these before starting:
-
-### Required Software
-
-| Software | Version | Download |
-|----------|---------|----------|
-| Python | 3.8+ | https://www.python.org/downloads/ |
-| Node.js | 16+ | https://nodejs.org/ |
-| Git | Latest | https://git-scm.com/ |
+| Software  | Version | Download |
+|-----------|---------|----------|
+| Python    | 3.8+    | https://www.python.org/downloads/ |
+| Node.js   | 16+     | https://nodejs.org/ |
+| PostgreSQL| 12+     | https://www.postgresql.org/ (or use [Neon](https://neon.tech)) |
+| Git       | Latest  | https://git-scm.com/ |
 
 ### Verify Installation
 
 ```bash
-python --version    # Should show 3.8 or higher
-node --version      # Should show 16 or higher
-npm --version       # Should show 8 or higher
-git --version       # Should show installed version
+python --version   # 3.8+
+node --version     # 16+
+npm --version      # 8+
 ```
 
 ---
 
-## Database Setup (Neon - Recommended)
+## Database Setup
 
-**Why Neon?**
-- ✅ Free tier (no credit card required)
-- ✅ No local PostgreSQL installation needed
-- ✅ Cloud-hosted (access from anywhere)
-- ✅ Automatic backups
-- ✅ Takes only 2 minutes to setup
+### Option A: Neon (Cloud, Recommended)
 
-### Step 1: Create Neon Account
+1. Sign up at **https://neon.tech**
+2. Create a new project
+3. Copy the connection string (e.g. `postgresql://user:pass@ep-xxx.region.aws.neon.tech/neondb?sslmode=require`)
+4. Store it for the Backend Setup step
 
-1. Go to **https://neon.tech**
-2. Click **"Sign Up"**
-3. Sign up with GitHub, Google, or Email
-4. Verify your email (if required)
+### Option B: Local PostgreSQL
 
-### Step 2: Create Project
-
-1. Click **"Create a project"** or **"New Project"**
-2. Fill in details:
-   - **Project name:** `library-management`
-   - **PostgreSQL version:** 16 (recommended)
-   - **Region:** Choose closest to you
-3. Click **"Create project"**
-
-### Step 3: Get Connection String
-
-After project creation, you'll see a **Connection Details** section.
-
-1. Click **"Connection string"**
-2. Select **"Pooled connection"** (recommended)
-3. Copy the entire connection string
-
-It looks like:
-```
-postgresql://username:password@ep-cool-name-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
-```
-
-### Step 4: Save Connection String
-
-Keep this string safe - you'll need it in the next section!
-
-**⚠️ Important:** Never share this string publicly or commit it to GitHub.
-
----
-
-## Alternative: Local PostgreSQL
-
-Only follow this if you don't want to use Neon.
-
-### Install PostgreSQL
-
-**On Ubuntu/Debian:**
+**Ubuntu/Debian:**
 ```bash
 sudo apt update
 sudo apt install postgresql postgresql-contrib
 sudo systemctl start postgresql
 ```
 
-**On macOS:**
+**macOS:**
 ```bash
 brew install postgresql
 brew services start postgresql
 ```
 
-**On Windows:**
-- Download from https://www.postgresql.org/download/windows/
-- Run installer with default settings
-- Remember the password you set for postgres user
+**Windows:** Download from https://www.postgresql.org/download/windows/
 
-### Create Database
+### Create Database & Apply Schema
 
 ```bash
-# Access PostgreSQL
+# Connect to PostgreSQL
 psql -U postgres
 
 # Create database
-CREATE DATABASE library_db;
-
-# Exit
+CREATE DATABASE lms_db;
 \q
+
+# Apply schema
+psql -h localhost -U postgres -d lms_db -f lms_backend/database/schema.sql
+```
+
+For Neon, use their SQL Editor or connect with:
+```bash
+psql "your_neon_connection_string" -f lms_backend/database/schema.sql
 ```
 
 ---
 
 ## Backend Setup
 
-### Step 1: Clone Repository
+### 1. Clone and Enter Backend
 
 ```bash
-git clone https://github.com/swagat017/dbms.git
-cd dbms
+cd dbms_lms/lms_backend
 ```
 
-### Step 2: Install Python Dependencies
+### 2. Create Virtual Environment (Recommended)
+
+**Windows:**
+```bash
+python -m venv lms_env
+lms_env\Scripts\activate
+```
+
+**Linux/macOS:**
+```bash
+python3 -m venv lms_env
+source lms_env/bin/activate
+```
+
+### 3. Install Dependencies
 
 ```bash
-cd backend
 pip install -r requirements.txt
 ```
 
-**If you get "pip: command not found":**
+If `psycopg2` fails, try:
 ```bash
-python -m pip install -r requirements.txt
+pip install psycopg2-binary
 ```
 
-### Step 3: Configure Database
+### 4. Configure Environment
 
 ```bash
-# Create .env file
 cp .env.example .env
 ```
 
-Now edit the `.env` file:
+Edit `.env`:
 
-**For Neon (Recommended):**
-```bash
-# Open .env in your text editor
-# Replace this line with your actual Neon connection string:
-DATABASE_URL=postgresql://your-actual-connection-string-here
+**For Neon or any PostgreSQL URL:**
+```env
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+SECRET_KEY=your-secret-key
+JWT_SECRET_KEY=your-jwt-secret
 ```
 
-**For Local PostgreSQL:**
-```bash
-# In .env file, comment out DATABASE_URL and uncomment these:
-# DATABASE_URL=...  (comment this out)
-
+**For local PostgreSQL (alternative):**
+```env
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=library_db
+DB_NAME=lms_db
 DB_USER=postgres
-DB_PASSWORD=your_postgres_password
+DB_PASSWORD=your_password
 ```
 
-### Step 4: Initialize Database
+Optional admin defaults:
+```env
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=admin123
+ADMIN_NAME=Administrator
+```
+
+### 5. Initialize Database
 
 ```bash
-python setup_db.py
+python init_database.py
 ```
 
-**Expected output:**
-```
-============================================================
-Library Management System - Database Setup
-============================================================
+This creates tables (if schema was not applied manually) and adds a default admin user.
 
-Step 1: Creating database...
-✓ Database 'library_db' created successfully
-
-Step 2: Initializing schema...
-✓ Database schema initialized successfully
-
-Step 3: Creating default admin user...
-✓ Admin user created (email: admin@library.com, password: admin123)
-
-============================================================
-✓ Database setup completed successfully!
-============================================================
-```
-
-### Step 5: Test Backend
+### 6. Start Backend
 
 ```bash
-python app.py
+python run.py
 ```
 
-**Expected output:**
-```
- * Running on http://127.0.0.1:5000
-```
+Backend runs at **http://localhost:5000**
 
-**Test it:** Open http://localhost:5000/health in browser
-- Should see: `{"status":"healthy","database":"connected"}`
-
-Press `Ctrl+C` to stop the server.
+Test: http://localhost:5000/ → `{"message":"LMS Backend Running Successfully"}`
 
 ---
 
 ## Frontend Setup
 
-Open a **NEW terminal** (keep backend running).
-
-### Step 1: Install Dependencies
+### 1. Enter Frontend Directory
 
 ```bash
-cd frontend
+cd dbms_lms/lms_frontend
+```
+
+### 2. Install Dependencies
+
+```bash
 npm install
 ```
 
-**This might take 2-3 minutes.**
+### 3. Configure API URL (Optional)
 
-### Step 2: Start Development Server
+By default the frontend proxies `/api` to `http://localhost:5000`. If your backend runs elsewhere:
+
+Create `.env`:
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+### 4. Start Development Server
 
 ```bash
 npm run dev
 ```
 
-**Expected output:**
-```
-  VITE v5.0.8  ready in 500 ms
-
-  ➜  Local:   http://localhost:3000/
-  ➜  Network: use --host to expose
-```
+Frontend runs at **http://localhost:5173**
 
 ---
 
@@ -250,219 +203,167 @@ npm run dev
 
 ### Start Both Services
 
-**Terminal 1 - Backend:**
+**Terminal 1 — Backend:**
 ```bash
-cd backend
-python app.py
+cd lms_backend
+python run.py
 ```
 
-**Terminal 2 - Frontend:**
+**Terminal 2 — Frontend:**
 ```bash
-cd frontend
+cd lms_frontend
 npm run dev
 ```
 
-### Access Application
+### Access
 
-1. Open browser: **http://localhost:3000**
-2. You'll see the login page
+Open **http://localhost:5173** in a browser.
 
-### Default Admin Login
+**Default admin credentials:**
+- Email: `admin@example.com`
+- Password: `admin123`
 
-```
-Email:    admin@library.com
-Password: admin123
-```
-
-**⚠️ IMPORTANT:** Change the admin password after first login!
+Change the password after first login.
 
 ---
 
-## First Steps After Login
+## API Reference
 
-1. **Change Password** (recommended)
-2. **Create a test user:**
-   - Click "Register" (logout first)
-   - Fill in details
-   - Login as admin
-   - Go to "User Management" → Approve the user
-3. **Add some books:**
-   - Go to "Book Management"
-   - Click "Add Book"
-4. **Test borrowing:**
-   - Login as the approved user
-   - Browse books
-   - Admin can issue books to users
+Base URL: `http://localhost:5000` (or your backend URL)
+
+### Authentication
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/users/register` | Register (name, email, phone?, password, role_id: 2=Teacher, 3=Student) |
+| POST | `/users/login` | Login (email, password) |
+| POST | `/users/logout` | Logout (requires JWT) |
+| GET | `/users/profile` | Get current user (requires JWT) |
+| GET | `/users/pending` | Pending registrations (admin) |
+| POST | `/users/approve/<user_id>` | Approve user (admin) |
+| POST | `/users/reject/<user_id>` | Reject user (admin) |
+
+### Books
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/books/` | List all books |
+| GET | `/books/unavailable` | Books with available_copies = 0 |
+| GET | `/books/<id>` | Get book by ID |
+| POST | `/books/` | Add book (admin) |
+| PUT | `/books/<id>` | Update book (admin) |
+| DELETE | `/books/<id>` | Soft delete book (admin) |
+
+### Borrow
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/borrow/issue` | Borrow book (body: `{book_id}`) |
+| POST | `/borrow/return` | Return book (body: `{book_id}`) |
+| GET | `/borrow/my/active` | My active borrows |
+| GET | `/borrow/my/history` | My borrow history |
+| GET | `/borrow/admin/users` | Users for admin issue (admin) |
+| GET | `/borrow/admin/active` | All active borrows (admin) |
+| POST | `/borrow/admin/issue` | Issue to user (body: `{user_id, book_id}`) |
+| POST | `/borrow/admin/return` | Return by borrow_id (body: `{borrow_id}`) |
+
+### Reservations
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/reservation/create` | Create (body: `{book_id}`) |
+| DELETE | `/reservation/cancel/<id>` | Cancel reservation |
+| GET | `/reservation/my` | My reservations |
+| GET | `/reservation/all` | All reservations (admin) |
+
+### Fines
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/fine/my` | My unpaid fines |
+| GET | `/fine/all` | All fines (admin) |
+| POST | `/fine/pay/<fine_id>` | Mark paid (admin) |
+
+### Audit
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/audit/my-logs` | My audit logs |
+| GET | `/audit/all` | All audit logs (admin) |
+
+### Stats
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/stats/admin` | Admin dashboard stats |
+| GET | `/stats/teacher` | Teacher dashboard stats |
+| GET | `/stats/student` | Student dashboard stats |
 
 ---
 
 ## Troubleshooting
 
-### Backend Issues
+### Backend
 
-#### "ModuleNotFoundError: No module named 'flask'"
+**"ModuleNotFoundError: No module named 'flask'"**
 ```bash
 pip install -r requirements.txt
 ```
 
-#### "psycopg2 installation error"
+**"Database connection failed"**
+- Verify `DATABASE_URL` in `.env`
+- Ensure PostgreSQL is running
+- For Neon: ensure `?sslmode=require` is in the URL
+
+**"Port 5000 already in use"**
 ```bash
-# Try this instead:
-pip install psycopg2-binary
+# Find process (Windows)
+netstat -ano | findstr :5000
+
+# Find process (Linux/macOS)
+lsof -i :5000
 ```
 
-#### "Database connection failed"
-- **Neon:** Check your DATABASE_URL is correct
-- **Local:** Make sure PostgreSQL is running
-  ```bash
-  # Check status
-  sudo systemctl status postgresql  # Linux
-  brew services list               # macOS
-  ```
+### Frontend
 
-#### "Port 5000 already in use"
-```bash
-# Find and kill the process
-lsof -ti:5000 | xargs kill -9  # Mac/Linux
-netstat -ano | findstr :5000   # Windows
-```
-
-### Frontend Issues
-
-#### "npm: command not found"
+**"npm: command not found"**
 - Install Node.js from https://nodejs.org/
 
-#### "npm install fails"
+**"Cannot connect to backend"**
+- Ensure backend is running on port 5000
+- Check proxy in `vite.config.js` (default: `/api` → `http://localhost:5000`)
+
+**"Port 5173 already in use"**
+- Vite will try 5174, 5175, etc., or stop the other process
+
+### Database
+
+**" relation does not exist"**
 ```bash
-# Clear cache and try again
-npm cache clean --force
-rm -rf node_modules package-lock.json
-npm install
+python init_database.py
+# Or apply schema manually:
+psql -h <host> -U <user> -d <db> -f lms_backend/database/schema.sql
 ```
 
-#### "Cannot connect to backend API"
-- Make sure backend is running on port 5000
-- Check browser console for errors
-- Try: http://localhost:5000/health
-
-#### "Port 3000 already in use"
-- Vite will automatically use port 3001 or 3002
-- Or kill the process:
-  ```bash
-  lsof -ti:3000 | xargs kill -9  # Mac/Linux
-  ```
-
-### Database Issues
-
-#### "Authentication failed"
-- **Neon:** Double-check your connection string
-- **Local:** Verify postgres password
-
-#### "Database does not exist"
-```bash
-# Run setup script again
-python setup_db.py
-```
-
-#### "SSL required" (Neon)
-- Make sure connection string ends with `?sslmode=require`
+**"User not approved"**
+- Register as Student/Teacher
+- Login as admin and approve from Verify Users
 
 ---
 
-## Verification Checklist
+## Build for Production
 
-- [ ] Backend runs on http://localhost:5000
-- [ ] `/health` endpoint returns healthy status
-- [ ] Frontend runs on http://localhost:3000
-- [ ] Can see login page
-- [ ] Can login with admin credentials
-- [ ] Dashboard loads successfully
-
----
-
-## Quick Reference
-
-### Start Application
+**Backend:**
 ```bash
-# Terminal 1
-cd backend && python app.py
-
-# Terminal 2
-cd frontend && npm run dev
+# Use gunicorn or similar
+gunicorn -w 4 -b 0.0.0.0:5000 "run:app"
 ```
 
-### Stop Application
-- Press `Ctrl+C` in both terminals
-
-### Reset Database
+**Frontend:**
 ```bash
-cd backend
-python setup_db.py  # This will recreate everything
+cd lms_frontend
+npm run build
+# Serve the dist/ folder with nginx or any static server
 ```
 
-### View Logs
-- Backend: Check terminal where `app.py` is running
-- Frontend: Check browser console (F12)
-
----
-
-## Next Steps
-
-1. ✅ Change admin password
-2. ✅ Create test users and approve them
-3. ✅ Add books to the library
-4. ✅ Test borrowing workflow
-5. ✅ Explore admin features
-
----
-
-## Need Help?
-
-- **Documentation:** See `SETUP_GUIDE.txt` and `README.md`
-- **Database Schema:** Check `backend/database/schema.sql`
-- **API Docs:** See `backend/SETUP.txt`
-
----
-
-## Development Tips
-
-### Add New Python Package
-```bash
-cd backend
-pip install package-name
-pip freeze > requirements.txt  # Update requirements
-```
-
-### Add New npm Package
-```bash
-cd frontend
-npm install package-name
-```
-
-### View Database (Neon)
-1. Go to https://console.neon.tech
-2. Select your project
-3. Click "SQL Editor"
-4. Run queries directly
-
-### View Database (Local)
-```bash
-psql -U postgres -d library_db
-\dt  # List tables
-\q   # Quit
-```
-
----
-
-## Production Deployment
-
-For deploying to production, see our deployment guides:
-- Backend: Deploy to Render/Railway/Heroku
-- Frontend: Deploy to Vercel/Netlify
-- Database: Use Neon (already production-ready!)
-
----
-
-**🎉 Congratulations! Your Library Management System is ready!**
-
-Happy coding! 📚✨
+Ensure `VITE_API_URL` points to your production backend URL.
