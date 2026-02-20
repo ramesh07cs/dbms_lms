@@ -1,23 +1,23 @@
 import { useEffect, useState } from 'react'
-import { booksApi, borrowApi } from '../../api/services'
+import { booksApi, reservationApi } from '../../api/services'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
-export default function AvailableBooks() {
+export default function Reservations() {
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
 
   const load = () => {
-    booksApi.getAll().then(({ data }) => setBooks(data.filter((b) => b.available_copies > 0))).finally(() => setLoading(false))
+    booksApi.getUnavailable().then(({ data }) => setBooks(data)).finally(() => setLoading(false))
   }
 
   useEffect(() => { load() }, [])
 
-  const borrow = async (bookId) => {
+  const reserve = async (bookId) => {
     try {
-      await borrowApi.issue(bookId)
-      toast.success('Book borrowed successfully')
+      await reservationApi.create(bookId)
+      toast.success('Reserved')
       load()
     } catch (e) {
       toast.error(e.response?.data?.error || 'Failed')
@@ -32,7 +32,8 @@ export default function AvailableBooks() {
 
   return (
     <>
-      <h2 className="text-2xl font-bold text-slate-800 mb-6">Available Books</h2>
+      <h2 className="text-2xl font-bold text-slate-800 mb-6">Reservations</h2>
+      <p className="text-slate-600 mb-4">Books with no available copies. Reserve to join the waiting queue.</p>
       <input
         type="text"
         placeholder="Search..."
@@ -59,12 +60,13 @@ export default function AvailableBooks() {
                 <td className="px-6 py-4">{b.category || '-'}</td>
                 <td className="px-6 py-4">{b.available_copies}</td>
                 <td className="px-6 py-4">
-                  <button onClick={() => borrow(b.book_id)} className="px-3 py-1 bg-primary-600 text-white rounded text-sm">Borrow</button>
+                  <button onClick={() => reserve(b.book_id)} className="px-3 py-1 bg-amber-600 text-white rounded text-sm">Reserve</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        {filtered.length === 0 && <p className="p-8 text-slate-500 text-center">No unavailable books to reserve</p>}
       </div>
     </>
   )

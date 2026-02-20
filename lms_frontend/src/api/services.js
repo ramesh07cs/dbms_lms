@@ -9,6 +9,7 @@ export const authApi = {
 
 export const booksApi = {
   getAll: () => api.get('/books/'),
+  getUnavailable: () => api.get('/books/unavailable'),
   getOne: (id) => api.get(`/books/${id}`),
   create: (data) => api.post('/books/', data),
   update: (id, data) => api.put(`/books/${id}`, data),
@@ -40,7 +41,8 @@ export const fineApi = {
 }
 
 export const auditApi = {
-  getAll: (page = 1, limit = 20) => api.get('/admin/audit/', { params: { page, limit } }),
+  getAll: (page = 1, limit = 20) => api.get('/audit/all', { params: { page, limit } }),
+  myLogs: (page = 1, limit = 20) => api.get('/audit/my-logs', { params: { page, limit } }),
 }
 
 export const usersApi = {

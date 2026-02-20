@@ -5,7 +5,8 @@ from app.models.book_queries import (
     update_book_copies,
     update_book,
     soft_delete_book,
-    get_all_books
+    get_all_books,
+    get_unavailable_books,
 )
 
 def add_book(conn, title, author, isbn, total_copies, category=None):
@@ -41,6 +42,11 @@ def fetch_book(conn, book_id):
 
 def fetch_all_books(conn):
     return get_all_books(conn)
+
+
+def fetch_unavailable_books(conn):
+    """Books with available_copies = 0."""
+    return get_unavailable_books(conn)
 
 
 def change_book_copies(conn, book_id, new_available_copies):

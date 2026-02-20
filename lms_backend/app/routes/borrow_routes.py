@@ -85,6 +85,7 @@ def return_book():
 # USER: MY ACTIVE BORROWS (for return form - teacher/student)
 # =========================
 @borrow_bp.route("/my/active", methods=["GET"])
+@borrow_bp.route("/my-borrows", methods=["GET"])
 @jwt_required()
 def my_active_borrows():
     user = get_jwt_identity()

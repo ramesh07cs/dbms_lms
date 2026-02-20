@@ -17,14 +17,13 @@ import FineManagement from './pages/admin/FineManagement'
 import AuditLogs from './pages/admin/AuditLogs'
 
 import TeacherDashboard from './pages/teacher/Dashboard'
-import TeacherIssueReturn from './pages/teacher/IssueReturn'
 import TeacherViewBooks from './pages/teacher/ViewBooks'
-import TeacherReservations from './pages/teacher/Reservations'
 
 import StudentDashboard from './pages/student/Dashboard'
 import AvailableBooks from './pages/student/AvailableBooks'
 import StudentViewBooks from './pages/student/ViewBooks'
 import BorrowedBooks from './pages/student/BorrowedBooks'
+import StudentReservations from './pages/student/Reservations'
 import MyFines from './pages/student/MyFines'
 
 function ProtectedRoute({ children, allowedRoles }) {
@@ -92,9 +91,10 @@ export default function App() {
         }
       >
         <Route index element={<TeacherDashboard />} />
-        <Route path="issue-return" element={<TeacherIssueReturn />} />
+        <Route path="available" element={<AvailableBooks />} />
         <Route path="books" element={<TeacherViewBooks />} />
-        <Route path="reservations" element={<TeacherReservations />} />
+        <Route path="borrowed" element={<BorrowedBooks />} />
+        <Route path="reservations" element={<StudentReservations />} />
       </Route>
 
       <Route
@@ -109,6 +109,7 @@ export default function App() {
         <Route path="available" element={<AvailableBooks />} />
         <Route path="books" element={<StudentViewBooks />} />
         <Route path="borrowed" element={<BorrowedBooks />} />
+        <Route path="reservations" element={<StudentReservations />} />
         <Route path="fines" element={<MyFines />} />
       </Route>
 

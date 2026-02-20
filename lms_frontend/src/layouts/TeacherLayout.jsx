@@ -3,9 +3,10 @@ import SidebarLayout from './SidebarLayout'
 
 const navItems = [
   { to: '/teacher', label: 'Dashboard', icon: '📊', end: true },
-  { to: '/teacher/issue-return', label: 'Issue/Return Books', icon: '📚' },
+  { to: '/teacher/available', label: 'Available Books', icon: '📚' },
   { to: '/teacher/books', label: 'View Books', icon: '📖' },
-  { to: '/teacher/reservations', label: 'View Reservations', icon: '📋' },
+  { to: '/teacher/borrowed', label: 'Borrowed Books', icon: '📥' },
+  { to: '/teacher/reservations', label: 'Reservations', icon: '📋' },
 ]
 
 export default function TeacherLayout() {
