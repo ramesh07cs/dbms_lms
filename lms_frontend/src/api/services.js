@@ -9,7 +9,6 @@ export const authApi = {
 
 export const booksApi = {
   getAll: () => api.get('/books/'),
-  getUnavailable: () => api.get('/books/unavailable'),
   getOne: (id) => api.get(`/books/${id}`),
   create: (data) => api.post('/books/', data),
   update: (id, data) => api.put(`/books/${id}`, data),
@@ -17,14 +16,36 @@ export const booksApi = {
 }
 
 export const borrowApi = {
-  issue: (bookId) => api.post('/borrow/issue', { book_id: bookId }),
+  request: (bookId) => {
+    const payload = { book_id: Number(bookId) }
+    console.log('[Borrow Request] Payload:', payload)
+    console.log('[Borrow Request] Endpoint: POST /borrow/request')
+    console.log('[Borrow Request] Token:', window.__LMS_TOKEN__ ? 'Present' : 'Missing')
+    return api.post('/borrow/request', payload)
+      .then((response) => {
+        console.log('[Borrow Request] Success:', response.data)
+        return response
+      })
+      .catch((error) => {
+        console.error('[Borrow Request] Error:', error)
+        console.error('[Borrow Request] Response:', error.response?.data)
+        console.error('[Borrow Request] Status:', error.response?.status)
+        throw error
+      })
+  },
   return: (bookId) => api.post('/borrow/return', { book_id: bookId }),
   myActive: () => api.get('/borrow/my/active'),
   myHistory: (page = 1) => api.get('/borrow/my/history', { params: { page } }),
+  adminPending: () => api.get('/borrow/admin/pending'),
+  adminAll: () => api.get('/borrow/admin/all'),
+  adminApprove: (borrowId) => api.post(`/borrow/admin/approve/${borrowId}`),
+  adminReject: (borrowId) => api.post(`/borrow/admin/reject/${borrowId}`),
   adminUsers: () => api.get('/borrow/admin/users'),
   adminActive: () => api.get('/borrow/admin/active'),
   adminIssue: (userId, bookId) => api.post('/borrow/admin/issue', { user_id: userId, book_id: bookId }),
   adminReturn: (borrowId) => api.post('/borrow/admin/return', { borrow_id: borrowId }),
+  teacherStudents: () => api.get('/borrow/teacher/students'),
+  teacherIssue: (userId, bookId) => api.post('/borrow/teacher/issue', { user_id: userId, book_id: bookId }),
 }
 
 export const reservationApi = {
@@ -41,14 +62,17 @@ export const fineApi = {
 }
 
 export const auditApi = {
-  getAll: (page = 1, limit = 20) => api.get('/audit/all', { params: { page, limit } }),
-  myLogs: (page = 1, limit = 20) => api.get('/audit/my-logs', { params: { page, limit } }),
+  getAll: (page = 1, limit = 20) => api.get('/admin/audit/', { params: { page, limit } }),
 }
 
 export const usersApi = {
   pending: () => api.get('/users/pending'),
+  all: () => api.get('/users/all'),
+  list: () => api.get('/users/list'),
   approve: (userId) => api.post(`/users/approve/${userId}`),
   reject: (userId) => api.post(`/users/reject/${userId}`),
+  setStatus: (userId, status) => api.put(`/users/${userId}/status`, { status }),
+  delete: (userId) => api.delete(`/users/${userId}`),
 }
 
 export const statsApi = {

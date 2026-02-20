@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { booksApi, borrowApi } from '../../api/services'
+import { booksApi, borrowApi, reservationApi } from '../../api/services'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import toast from 'react-hot-toast'
 
@@ -7,20 +7,38 @@ export default function AvailableBooks() {
   const [books, setBooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [acting, setActing] = useState(null)
 
   const load = () => {
-    booksApi.getAll().then(({ data }) => setBooks(data.filter((b) => b.available_copies > 0))).finally(() => setLoading(false))
+    booksApi.getAll().then(({ data }) => setBooks(data)).finally(() => setLoading(false))
   }
-
   useEffect(() => { load() }, [])
 
-  const borrow = async (bookId) => {
+  const handleRequestBorrow = async (bookId) => {
+    setActing(bookId)
     try {
-      await borrowApi.issue(bookId)
-      toast.success('Book borrowed successfully')
+      await borrowApi.request(bookId)
+      toast.success('Borrow request submitted. Wait for admin approval.')
+      load()
+    } catch (e) {
+      const errorMsg = e.response?.data?.error || e.message || 'Failed to submit borrow request'
+      console.error('Borrow request failed:', errorMsg, e)
+      toast.error(errorMsg)
+    } finally {
+      setActing(null)
+    }
+  }
+
+  const handleReserve = async (bookId) => {
+    setActing(bookId)
+    try {
+      await reservationApi.create(bookId)
+      toast.success('Reserved. You will get a borrow request when a copy is available.')
       load()
     } catch (e) {
       toast.error(e.response?.data?.error || 'Failed')
+    } finally {
+      setActing(null)
     }
   }
 
@@ -59,7 +77,11 @@ export default function AvailableBooks() {
                 <td className="px-6 py-4">{b.category || '-'}</td>
                 <td className="px-6 py-4">{b.available_copies}</td>
                 <td className="px-6 py-4">
-                  <button onClick={() => borrow(b.book_id)} className="px-3 py-1 bg-primary-600 text-white rounded text-sm">Borrow</button>
+                  {Number(b.available_copies) >= 1 ? (
+                    <button onClick={() => handleRequestBorrow(b.book_id)} disabled={acting !== null} className="px-3 py-1 bg-primary-600 text-white rounded text-sm disabled:opacity-50">Request Borrow</button>
+                  ) : (
+                    <button onClick={() => handleReserve(b.book_id)} disabled={acting !== null} className="px-3 py-1 bg-amber-600 text-white rounded text-sm disabled:opacity-50">Reserve</button>
+                  )}
                 </td>
               </tr>
             ))}

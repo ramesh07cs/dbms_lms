@@ -9,7 +9,9 @@ import StudentLayout from './layouts/StudentLayout'
 
 import AdminDashboard from './pages/admin/Dashboard'
 import VerifyUsers from './pages/admin/VerifyUsers'
+import UserManagement from './pages/admin/UserManagement'
 import ManageBooks from './pages/admin/ManageBooks'
+import BorrowManagement from './pages/admin/BorrowManagement'
 import IssueBook from './pages/admin/IssueBook'
 import ReturnBook from './pages/admin/ReturnBook'
 import AllReservations from './pages/admin/AllReservations'
@@ -17,13 +19,16 @@ import FineManagement from './pages/admin/FineManagement'
 import AuditLogs from './pages/admin/AuditLogs'
 
 import TeacherDashboard from './pages/teacher/Dashboard'
+import TeacherIssueReturn from './pages/teacher/IssueReturn'
 import TeacherViewBooks from './pages/teacher/ViewBooks'
+import TeacherReservations from './pages/teacher/Reservations'
+import TeacherMyFines from './pages/teacher/MyFines'
+import TeacherViewUsers from './pages/teacher/ViewUsers'
 
 import StudentDashboard from './pages/student/Dashboard'
-import AvailableBooks from './pages/student/AvailableBooks'
 import StudentViewBooks from './pages/student/ViewBooks'
 import BorrowedBooks from './pages/student/BorrowedBooks'
-import StudentReservations from './pages/student/Reservations'
+import BorrowHistory from './pages/student/BorrowHistory'
 import MyFines from './pages/student/MyFines'
 
 function ProtectedRoute({ children, allowedRoles }) {
@@ -74,7 +79,9 @@ export default function App() {
       >
         <Route index element={<AdminDashboard />} />
         <Route path="verify-users" element={<VerifyUsers />} />
+        <Route path="users" element={<UserManagement />} />
         <Route path="books" element={<ManageBooks />} />
+        <Route path="borrows" element={<BorrowManagement />} />
         <Route path="issue-book" element={<IssueBook />} />
         <Route path="return-book" element={<ReturnBook />} />
         <Route path="reservations" element={<AllReservations />} />
@@ -91,10 +98,11 @@ export default function App() {
         }
       >
         <Route index element={<TeacherDashboard />} />
-        <Route path="available" element={<AvailableBooks />} />
+        <Route path="issue-return" element={<TeacherIssueReturn />} />
         <Route path="books" element={<TeacherViewBooks />} />
-        <Route path="borrowed" element={<BorrowedBooks />} />
-        <Route path="reservations" element={<StudentReservations />} />
+        <Route path="reservations" element={<TeacherReservations />} />
+        <Route path="fines" element={<TeacherMyFines />} />
+        <Route path="users" element={<TeacherViewUsers />} />
       </Route>
 
       <Route
@@ -106,10 +114,9 @@ export default function App() {
         }
       >
         <Route index element={<StudentDashboard />} />
-        <Route path="available" element={<AvailableBooks />} />
         <Route path="books" element={<StudentViewBooks />} />
         <Route path="borrowed" element={<BorrowedBooks />} />
-        <Route path="reservations" element={<StudentReservations />} />
+        <Route path="history" element={<BorrowHistory />} />
         <Route path="fines" element={<MyFines />} />
       </Route>
 

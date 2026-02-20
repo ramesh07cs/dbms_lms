@@ -3,10 +3,9 @@ import SidebarLayout from './SidebarLayout'
 
 const navItems = [
   { to: '/student', label: 'Dashboard', icon: '📊', end: true },
-  { to: '/student/available', label: 'Available Books', icon: '📚' },
   { to: '/student/books', label: 'View Books', icon: '📖' },
   { to: '/student/borrowed', label: 'Borrowed Books', icon: '📥' },
-  { to: '/student/reservations', label: 'Reservations', icon: '📋' },
+  { to: '/student/history', label: 'Borrow History', icon: '📜' },
   { to: '/student/fines', label: 'My Fines', icon: '💰' },
 ]
 

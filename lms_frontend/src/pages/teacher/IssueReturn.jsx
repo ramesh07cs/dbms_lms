@@ -3,26 +3,30 @@ import { borrowApi, booksApi } from '../../api/services'
 import toast from 'react-hot-toast'
 
 export default function TeacherIssueReturn() {
+  const [students, setStudents] = useState([])
   const [books, setBooks] = useState([])
   const [activeBorrows, setActiveBorrows] = useState([])
+  const [userId, setUserId] = useState('')
   const [bookId, setBookId] = useState('')
   const [returnBookId, setReturnBookId] = useState('')
   const [loading, setLoading] = useState(false)
 
   const load = () => {
-    booksApi.getAll().then(({ data }) => setBooks(data.filter((b) => b.available_copies > 0)))
-    borrowApi.myActive().then(({ data }) => setActiveBorrows(data))
+    borrowApi.teacherStudents().then(({ data }) => setStudents(data)).catch(() => setStudents([]))
+    booksApi.getAll().then(({ data }) => setBooks(data.filter((b) => b.available_copies > 0))).catch(() => [])
+    borrowApi.myActive().then(({ data }) => setActiveBorrows(data)).catch(() => [])
   }
 
   useEffect(() => { load() }, [])
 
   const issue = async (e) => {
     e.preventDefault()
-    if (!bookId) { toast.error('Select a book'); return }
+    if (!userId || !bookId) { toast.error('Select student and book'); return }
     setLoading(true)
     try {
-      await borrowApi.issue(parseInt(bookId))
-      toast.success('Book issued')
+      await borrowApi.teacherIssue(parseInt(userId), parseInt(bookId))
+      toast.success('Book issued to student')
+      setUserId('')
       setBookId('')
       load()
     } catch (e) {
@@ -53,15 +57,25 @@ export default function TeacherIssueReturn() {
       <h2 className="text-2xl font-bold text-slate-800 mb-6">Issue / Return Books</h2>
       <div className="grid md:grid-cols-2 gap-8">
         <form onSubmit={issue} className="space-y-3">
-          <h3 className="font-semibold">Issue Book</h3>
-          <select value={bookId} onChange={(e) => setBookId(e.target.value)} className="w-full px-4 py-2 border rounded-lg">
-            <option value="">Select book</option>
-            {books.map((b) => <option key={b.book_id} value={b.book_id}>{b.title} (avail: {b.available_copies})</option>)}
-          </select>
+          <h3 className="font-semibold">Issue Book to Student</h3>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Student</label>
+            <select value={userId} onChange={(e) => setUserId(e.target.value)} className="w-full px-4 py-2 border rounded-lg">
+              <option value="">Select student</option>
+              {students.map((u) => <option key={u.user_id} value={u.user_id}>{u.name} ({u.email})</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Book</label>
+            <select value={bookId} onChange={(e) => setBookId(e.target.value)} className="w-full px-4 py-2 border rounded-lg">
+              <option value="">Select book</option>
+              {books.map((b) => <option key={b.book_id} value={b.book_id}>{b.title} (avail: {b.available_copies})</option>)}
+            </select>
+          </div>
           <button type="submit" disabled={loading} className="px-4 py-2 bg-primary-600 text-white rounded-lg">Issue</button>
         </form>
         <form onSubmit={returnBook} className="space-y-3">
-          <h3 className="font-semibold">Return Book</h3>
+          <h3 className="font-semibold">My Returns</h3>
           <select value={returnBookId} onChange={(e) => setReturnBookId(e.target.value)} className="w-full px-4 py-2 border rounded-lg">
             <option value="">Select active borrow</option>
             {activeBorrows.map((b) => <option key={b.borrow_id} value={b.book_id}>{b.title} (due: {new Date(b.due_date).toLocaleDateString()})</option>)}

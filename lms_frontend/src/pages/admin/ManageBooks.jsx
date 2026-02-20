@@ -9,7 +9,7 @@ export default function ManageBooks() {
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState({ title: '', author: '', category: '', isbn: '', total_copies: '' })
+  const [form, setForm] = useState({ title: '', author: '', category: '', isbn: '', total_copies: '', available_copies: '' })
 
   const load = () => {
     booksApi.getAll()
@@ -22,13 +22,20 @@ export default function ManageBooks() {
 
   const openAdd = () => {
     setEditing(null)
-    setForm({ title: '', author: '', category: '', isbn: '', total_copies: '' })
+    setForm({ title: '', author: '', category: '', isbn: '', total_copies: '', available_copies: '' })
     setShowModal(true)
   }
 
   const openEdit = (b) => {
     setEditing(b)
-    setForm({ title: b.title, author: b.author, category: b.category || '', isbn: b.isbn, total_copies: String(b.total_copies) })
+    setForm({
+      title: b.title,
+      author: b.author,
+      category: b.category || '',
+      isbn: b.isbn,
+      total_copies: String(b.total_copies ?? ''),
+      available_copies: String(b.available_copies ?? ''),
+    })
     setShowModal(true)
   }
 
@@ -37,12 +44,30 @@ export default function ManageBooks() {
       toast.error('Title, author, ISBN and total copies required')
       return
     }
+    const total = parseInt(form.total_copies, 10)
+    const avail = form.available_copies !== '' ? parseInt(form.available_copies, 10) : total
+    if (isNaN(total) || total < 0) {
+      toast.error('Total copies must be a non-negative number')
+      return
+    }
+    if (editing && form.available_copies !== '' && (isNaN(avail) || avail < 0 || avail > total)) {
+      toast.error('Available copies must be between 0 and total copies')
+      return
+    }
     try {
       if (editing) {
-        await booksApi.update(editing.book_id, form)
+        await booksApi.update(editing.book_id, {
+          ...form,
+          total_copies: total,
+          available_copies: form.available_copies !== '' ? avail : Number(editing.available_copies),
+        })
         toast.success('Book updated')
       } else {
-        await booksApi.create(form)
+        await booksApi.create({
+          ...form,
+          total_copies: total,
+          available_copies: form.available_copies !== '' ? avail : total,
+        })
         toast.success('Book added')
       }
       setShowModal(false)
@@ -123,7 +148,14 @@ export default function ManageBooks() {
               <input value={form.author} onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))} placeholder="Author" className="w-full px-4 py-2 border rounded" />
               <input value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} placeholder="Category" className="w-full px-4 py-2 border rounded" />
               <input value={form.isbn} onChange={(e) => setForm((f) => ({ ...f, isbn: e.target.value }))} placeholder="ISBN" className="w-full px-4 py-2 border rounded" disabled={!!editing} />
-              <input type="number" value={form.total_copies} onChange={(e) => setForm((f) => ({ ...f, total_copies: e.target.value }))} placeholder="Total copies" className="w-full px-4 py-2 border rounded" />
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Total Copies</label>
+                <input type="number" min={0} value={form.total_copies} onChange={(e) => setForm((f) => ({ ...f, total_copies: e.target.value }))} placeholder="Total copies" className="w-full px-4 py-2 border rounded" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Available Copies</label>
+                <input type="number" min={0} value={form.available_copies} onChange={(e) => setForm((f) => ({ ...f, available_copies: e.target.value }))} placeholder="Available (e.g. same as total)" className="w-full px-4 py-2 border rounded" />
+              </div>
             </div>
             <div className="flex gap-2 mt-6">
               <button onClick={save} className="flex-1 py-2 bg-primary-600 text-white rounded">Save</button>

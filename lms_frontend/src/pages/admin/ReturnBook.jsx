@@ -8,7 +8,7 @@ export default function ReturnBook() {
   const [loading, setLoading] = useState(false)
 
   const load = () => {
-    borrowApi.adminActive().then(({ data }) => setBorrows(data)).catch(() => {})
+    borrowApi.adminActive().then(({ data }) => setBorrows(data)).catch(() => { })
   }
 
   useEffect(() => { load() }, [])

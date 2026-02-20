@@ -16,7 +16,7 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(() => {
     if (token) {
-      api.post('/users/logout').catch(() => {})
+      api.post('/users/logout').catch(() => { })
     }
     setToken(null)
     setUser(null)
@@ -44,13 +44,13 @@ export function AuthProvider({ children }) {
     const { data } = await api.post('/users/login', { email, password })
     const accessToken = data.access_token
     setToken(accessToken)
-    const payload = JSON.parse(atob(accessToken.split('.')[1]))
-    const sub = payload.sub || payload.identity || {}
-    setUser({
-      user_id: sub.id,
-      email: sub.email,
-      role_id: sub.role_id,
-    })
+    const { data: profileData } = await api.get('/users/profile')
+    if (profileData?.user) setUser(profileData.user)
+    else {
+      const payload = JSON.parse(atob(accessToken.split('.')[1]))
+      const sub = payload.sub || payload.identity || {}
+      setUser({ user_id: sub.id, email: sub.email, role_id: sub.role_id, name: '' })
+    }
     return data
   }
 

@@ -19,16 +19,16 @@ export default function MyFines() {
         <table className="w-full">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
-              <th className="text-left px-6 py-3 text-sm font-medium text-slate-700">ID</th>
+              <th className="text-left px-6 py-3 text-sm font-medium text-slate-700">Book Title</th>
               <th className="text-left px-6 py-3 text-sm font-medium text-slate-700">Amount</th>
               <th className="text-left px-6 py-3 text-sm font-medium text-slate-700">Status</th>
-              <th className="text-left px-6 py-3 text-sm font-medium text-slate-700">Created</th>
+              <th className="text-left px-6 py-3 text-sm font-medium text-slate-700">Date</th>
             </tr>
           </thead>
           <tbody>
             {fines.map((f) => (
               <tr key={f.fine_id} className="border-b border-slate-100">
-                <td className="px-6 py-4">{f.fine_id}</td>
+                <td className="px-6 py-4">{f.book_title || '-'}</td>
                 <td className="px-6 py-4">Rs {f.amount}</td>
                 <td className="px-6 py-4">{f.paid_status ? 'Paid' : 'Unpaid'}</td>
                 <td className="px-6 py-4">{f.created_at ? new Date(f.created_at).toLocaleString() : '-'}</td>
@@ -36,7 +36,7 @@ export default function MyFines() {
             ))}
           </tbody>
         </table>
-        {fines.length === 0 && <p className="p-8 text-slate-500 text-center">No unpaid fines</p>}
+        {fines.length === 0 && <p className="p-8 text-slate-500 text-center">No fines</p>}
       </div>
     </>
   )

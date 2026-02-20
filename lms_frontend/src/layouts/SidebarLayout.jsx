@@ -19,8 +19,7 @@ export default function SidebarLayout({ navItems }) {
               to={to}
               end={end}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive ? 'bg-primary-600 text-white' : 'text-slate-300 hover:bg-slate-700'
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive ? 'bg-primary-600 text-white' : 'text-slate-300 hover:bg-slate-700'
                 }`
               }
             >

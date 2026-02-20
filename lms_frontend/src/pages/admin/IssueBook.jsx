@@ -10,8 +10,8 @@ export default function IssueBook() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    borrowApi.adminUsers().then(({ data }) => setUsers(data)).catch(() => {})
-    booksApi.getAll().then(({ data }) => setBooks(data.filter((b) => b.available_copies > 0))).catch(() => {})
+    borrowApi.adminUsers().then(({ data }) => setUsers(data)).catch(() => { })
+    booksApi.getAll().then(({ data }) => setBooks(data.filter((b) => b.available_copies > 0))).catch(() => { })
   }, [])
 
   const submit = async (e) => {
