@@ -27,7 +27,7 @@ def issue_book(conn, user_id, book_id):
     """
     print("issue_book called with:", user_id, book_id)
 
-    # 0️⃣ Expire overdue reservations before issuing
+    # 0️ Expire overdue reservations before issuing
     expire_overdue_reservations(conn)
 
     # Validate book_id
@@ -110,13 +110,13 @@ def return_borrowed_book(conn, user_id, book_id):
     return_date = datetime.utcnow()
 
     try:
-        # 1️⃣ Calculate fine
+        # 1️ Calculate fine
         fine_amount = calculate_fine(due_date, return_date)
 
-        # 2️⃣ Mark borrow as returned
+        # 2️ Mark borrow as returned
         return_book_record(conn, borrow_id)
 
-        # 3️⃣ Increase available copies
+        # 3️ Increase available copies
         book = get_book_by_id(conn, book_id)
         if book:
             update_book_copies(
@@ -127,11 +127,11 @@ def return_borrowed_book(conn, user_id, book_id):
 
         fine_id = None
 
-        # 4️⃣ Create fine if late
+        # 4️ Create fine if late
         if fine_amount > 0:
             fine_id = create_fine(conn, borrow_id, user_id, fine_amount)
 
-        # 5️⃣ CHECK RESERVATION QUEUE (oldest ACTIVE)
+        # 5️ CHECK RESERVATION QUEUE (oldest ACTIVE)
         reservation = get_oldest_active_reservation(conn, book_id)
         auto_assigned_borrow_id = None
 
@@ -168,7 +168,7 @@ def return_borrowed_book(conn, user_id, book_id):
                 description=f"Book {book_id} auto-assigned from reservation"
             )
 
-        # 6️⃣ Audit return
+        # 6️ Audit return
         log_action(
             conn,
             user_id,
