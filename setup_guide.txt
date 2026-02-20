@@ -5,9 +5,12 @@ Tribhuvan University, Thapathali Campus
 
 PROJECT STRUCTURE
 -----------------
-dbms_lms/
-  lms_backend/      Flask REST API + PostgreSQL
-  lms_frontend/     React + Vite web application
+updated_lms_dbms/
+  Readme.md          Project overview
+  installation.md    Full installation & API reference
+  setup_guide.txt    This quick setup guide
+  lms_backend/       Flask REST API + PostgreSQL
+  lms_frontend/      React + Vite web application
 
 ================================================================================
 PREREQUISITES
@@ -86,6 +89,15 @@ Terminal 2:
    npm run dev
 
 Open: http://localhost:5173
+
+================================================================================
+TESTS
+================================================================================
+
+  From lms_backend/, run:
+    pytest
+
+  All tests should pass for the final LMS build.
 
 ================================================================================
 DEFAULT ADMIN
@@ -178,8 +190,9 @@ TROUBLESHOOTING
 FILES TO REFERENCE
 ================================================================================
 
-README.md         - Project overview
-INSTALLATION.md   - Full installation & API reference
+Readme.md         - Project overview
+installation.md   - Full installation & API reference
+setup_guide.txt   - This quick setup guide
 lms_backend/database/schema.sql - Database schema
 lms_backend/.env.example - Environment template
 

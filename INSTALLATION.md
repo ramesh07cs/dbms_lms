@@ -87,7 +87,7 @@ psql "your_neon_connection_string" -f lms_backend/database/schema.sql
 ### 1. Clone and Enter Backend
 
 ```bash
-cd dbms_lms/lms_backend
+cd lms_backend
 ```
 
 ### 2. Create Virtual Environment (Recommended)
@@ -171,7 +171,7 @@ Test: http://localhost:5000/ → `{"message":"LMS Backend Running Successfully"}
 ### 1. Enter Frontend Directory
 
 ```bash
-cd dbms_lms/lms_frontend
+cd lms_frontend
 ```
 
 ### 2. Install Dependencies
@@ -337,20 +337,32 @@ lsof -i :5000
 - Vite will try 5174, 5175, etc., or stop the other process
 
 ### Database
-
+        
 **" relation does not exist"**
 ```bash
 python init_database.py
 # Or apply schema manually:
 psql -h <host> -U <user> -d <db> -f lms_backend/database/schema.sql
 ```
-
+        
 **"User not approved"**
 - Register as Student/Teacher
 - Login as admin and approve from Verify Users
-
+        
 ---
 
+## Running Backend Tests
+
+From the `lms_backend` directory, run:
+
+```bash
+pytest
+```
+
+All tests should pass for the final LMS build.
+        
+---
+        
 ## Build for Production
 
 **Backend:**

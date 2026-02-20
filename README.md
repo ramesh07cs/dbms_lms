@@ -71,9 +71,9 @@ The LMS manages library operations including user registration, book catalog, bo
 ## Project Structure
 
 ```
-dbms_lms/
-├── README.md           # This file
-├── INSTALLATION.md     # Detailed setup guide
+updated_lms_dbms/
+├── Readme.md           # Project overview (this file)
+├── installation.md     # Detailed setup & API reference
 ├── setup_guide.txt     # Quick reference
 ├── lms_backend/        # Flask API
 │   ├── app/
@@ -172,7 +172,20 @@ Open http://localhost:5173 in a browser.
 | GET | `/audit/my-logs` | My audit logs |
 | GET | `/audit/all` | All audit logs (admin) |
 
-See `INSTALLATION.md` for the complete API reference.
+See `installation.md` for the complete API reference.
+
+---
+
+## Running Tests
+
+Backend tests (pytest) are available under `lms_backend/tests`.
+
+```bash
+cd lms_backend
+pytest
+```
+
+All tests should pass for the final LMS build.
 
 ---
 
